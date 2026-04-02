@@ -1,0 +1,1095 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>관리자 | 그림책 질문박스 📦</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" />
+  <link rel="stylesheet" href="css/style.css" />
+  <style>
+    /* ============ 관리자 전용 스타일 ============ */
+    .admin-layout { display: flex; min-height: calc(100vh - 64px); }
+
+    /* 사이드바 */
+    .admin-sidebar {
+      width: 240px;
+      background: #fff;
+      border-right: 1px solid var(--border-light);
+      padding: 24px 0;
+      flex-shrink: 0;
+      position: sticky;
+      top: 64px;
+      height: calc(100vh - 64px);
+      overflow-y: auto;
+    }
+    .sidebar-title {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: .1em;
+      padding: 0 20px;
+      margin-bottom: 8px;
+    }
+    .sidebar-link {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 20px;
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--text-body);
+      transition: all var(--transition);
+      border-right: 3px solid transparent;
+      cursor: pointer;
+    }
+    .sidebar-link:hover { background: var(--bg-soft); color: var(--primary-dark); }
+    .sidebar-link.active { background: #EEF3FF; color: var(--primary-dark); border-right-color: var(--primary); font-weight: 700; }
+    .sidebar-link i { width: 18px; text-align: center; font-size: 14px; }
+    .sidebar-stat {
+      margin: 20px;
+      padding: 16px;
+      background: var(--bg-soft);
+      border-radius: var(--radius-md);
+    }
+    .sidebar-stat p { font-size: 12px; color: var(--text-muted); margin-bottom: 4px; }
+    .sidebar-stat strong { font-size: 24px; font-weight: 900; color: var(--primary); }
+
+    /* 메인 콘텐츠 */
+    .admin-main {
+      flex: 1;
+      padding: 32px;
+      background: var(--bg-main);
+      overflow-y: auto;
+    }
+    .admin-panel { display: none; }
+    .admin-panel.active { display: block; }
+
+    .admin-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 28px;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    .admin-header h1 { font-size: 24px; font-weight: 900; color: var(--text-dark); }
+    .admin-header p { font-size: 14px; color: var(--text-muted); margin-top: 4px; }
+
+    /* 도구모음 */
+    .admin-toolbar {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+    .admin-search {
+      flex: 1;
+      min-width: 200px;
+      max-width: 360px;
+      padding: 10px 16px;
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-md);
+      font-size: 14px;
+      font-family: var(--font);
+      background: #fff;
+    }
+    .admin-search:focus { outline: none; border-color: var(--primary); }
+
+    /* 도서 테이블 */
+    .admin-table-wrap {
+      background: #fff;
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--border-light);
+      overflow: hidden;
+      box-shadow: var(--shadow-sm);
+    }
+    .admin-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 14px;
+    }
+    .admin-table th {
+      background: var(--bg-main);
+      padding: 12px 16px;
+      text-align: left;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      border-bottom: 1px solid var(--border-light);
+      white-space: nowrap;
+    }
+    .admin-table td {
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--border-light);
+      vertical-align: middle;
+    }
+    .admin-table tr:last-child td { border-bottom: none; }
+    .admin-table tr:hover td { background: #FAFBFF; }
+    .admin-table .book-mini-cover {
+      width: 40px;
+      height: 50px;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      flex-shrink: 0;
+    }
+    .tbl-title { font-weight: 700; color: var(--text-dark); }
+    .tbl-author { font-size: 12px; color: var(--text-muted); }
+    .tbl-badge {
+      padding: 2px 8px;
+      border-radius: 100px;
+      font-size: 11px;
+      font-weight: 600;
+      background: var(--bg-soft);
+      color: var(--primary-dark);
+      white-space: nowrap;
+    }
+    .tbl-badge.featured { background: #FFF8E8; color: #E88C30; }
+    .tbl-actions { display: flex; gap: 6px; }
+    .tbl-actions .icon-btn {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: #fff;
+      color: var(--text-muted);
+      font-size: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all var(--transition);
+    }
+    .tbl-actions .icon-btn:hover { background: var(--bg-soft); color: var(--primary); border-color: var(--primary-light); }
+    .tbl-actions .icon-btn.del:hover { background: #FFF0F0; color: #E53E3E; border-color: #FCA5A5; }
+    .tag-list { display: flex; flex-wrap: wrap; gap: 4px; }
+    .mini-tag {
+      padding: 2px 6px;
+      font-size: 11px;
+      border-radius: 4px;
+      background: var(--bg-soft);
+      color: var(--text-muted);
+    }
+
+    /* 모달 */
+    .modal-backdrop {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,.4);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .modal-backdrop.open { display: flex; }
+    .modal {
+      background: #fff;
+      border-radius: var(--radius-xl);
+      width: 100%;
+      max-width: 720px;
+      max-height: 90vh;
+      overflow-y: auto;
+      box-shadow: var(--shadow-lg);
+      animation: fadeIn .2s ease;
+    }
+    .modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 24px 28px;
+      border-bottom: 1px solid var(--border-light);
+      position: sticky;
+      top: 0;
+      background: #fff;
+      z-index: 10;
+    }
+    .modal-header h2 { font-size: 18px; font-weight: 700; color: var(--text-dark); }
+    .modal-close {
+      width: 36px; height: 36px; border-radius: 50%;
+      border: 1px solid var(--border); background: none;
+      font-size: 16px; color: var(--text-muted); cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .modal-close:hover { background: var(--bg-soft); }
+    .modal-body { padding: 28px; }
+    .modal-footer {
+      padding: 20px 28px;
+      border-top: 1px solid var(--border-light);
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      position: sticky;
+      bottom: 0;
+      background: #fff;
+    }
+
+    /* 폼 */
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .form-group { display: flex; flex-direction: column; gap: 6px; }
+    .form-group.full { grid-column: 1 / -1; }
+    .form-label {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text-dark);
+      text-transform: uppercase;
+      letter-spacing: .05em;
+    }
+    .form-label span { color: #E53E3E; margin-left: 2px; }
+    .form-input, .form-select, .form-textarea {
+      padding: 10px 14px;
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-sm);
+      font-size: 14px;
+      font-family: var(--font);
+      color: var(--text-dark);
+      background: #fff;
+      transition: border-color var(--transition);
+    }
+    .form-input:focus, .form-select:focus, .form-textarea:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(108,158,232,.1);
+    }
+    .form-textarea { resize: vertical; min-height: 80px; line-height: 1.6; }
+    .form-hint { font-size: 11px; color: var(--text-light); }
+    .form-check { display: flex; align-items: center; gap: 8px; }
+    .form-check input { width: 16px; height: 16px; cursor: pointer; accent-color: var(--primary); }
+
+    /* 동적 필드 (배열 입력) */
+    .array-field { display: flex; flex-direction: column; gap: 8px; }
+    .array-row { display: flex; gap: 8px; }
+    .array-row input, .array-row textarea {
+      flex: 1;
+      padding: 8px 12px;
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-sm);
+      font-size: 13px;
+      font-family: var(--font);
+      line-height: 1.5;
+    }
+    .array-row textarea { resize: vertical; min-height: 60px; }
+    .array-row input:focus, .array-row textarea:focus { outline: none; border-color: var(--primary); }
+    .array-del-btn {
+      width: 32px; height: 32px; flex-shrink: 0; align-self: flex-start;
+      margin-top: 2px;
+      border: 1px solid var(--border); background: #fff; border-radius: 8px;
+      color: #E53E3E; cursor: pointer; font-size: 12px;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .array-del-btn:hover { background: #FFF0F0; }
+    .array-add-btn {
+      align-self: flex-start;
+      padding: 6px 14px;
+      font-size: 12px;
+      font-weight: 600;
+      background: var(--bg-soft);
+      border: 1.5px dashed var(--primary-light);
+      border-radius: var(--radius-sm);
+      color: var(--primary-dark);
+      cursor: pointer;
+      transition: all var(--transition);
+    }
+    .array-add-btn:hover { background: #E8F0FF; }
+
+    /* 확인 모달 */
+    .confirm-modal {
+      max-width: 400px;
+      text-align: center;
+    }
+    .confirm-modal .modal-body { padding: 32px; }
+    .confirm-icon { font-size: 48px; margin-bottom: 16px; }
+    .confirm-title { font-size: 20px; font-weight: 700; color: var(--text-dark); margin-bottom: 8px; }
+    .confirm-desc { font-size: 14px; color: var(--text-muted); }
+
+    /* 알림 */
+    .alert {
+      padding: 12px 16px;
+      border-radius: var(--radius-sm);
+      font-size: 13px;
+      font-weight: 600;
+      margin-bottom: 20px;
+      display: none;
+      align-items: center;
+      gap: 8px;
+    }
+    .alert.show { display: flex; }
+    .alert-success { background: #F0FFF4; color: #276749; border: 1px solid #9AE6B4; }
+    .alert-error { background: #FFF5F5; color: #C53030; border: 1px solid #FCA5A5; }
+
+    /* 통계 카드 */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 16px;
+      margin-bottom: 28px;
+    }
+    .stat-card {
+      background: #fff;
+      border: 1px solid var(--border-light);
+      border-radius: var(--radius-lg);
+      padding: 20px 24px;
+      box-shadow: var(--shadow-sm);
+    }
+    .stat-card-icon { font-size: 28px; margin-bottom: 8px; }
+    .stat-card-value { font-size: 28px; font-weight: 900; color: var(--text-dark); line-height: 1; margin-bottom: 4px; }
+    .stat-card-label { font-size: 13px; color: var(--text-muted); }
+    .stat-card-sub { font-size: 12px; color: var(--text-light); margin-top: 4px; }
+
+    /* 빈 테이블 */
+    .table-empty {
+      text-align: center;
+      padding: 60px 24px;
+      color: var(--text-muted);
+    }
+    .table-empty .empty-icon { font-size: 40px; margin-bottom: 12px; }
+
+    /* 반응형 */
+    @media (max-width: 900px) {
+      .admin-layout { flex-direction: column; }
+      .admin-sidebar { width: 100%; height: auto; position: static; display: flex; flex-wrap: wrap; padding: 12px; gap: 4px; }
+      .sidebar-stat { display: none; }
+      .sidebar-title { display: none; }
+      .sidebar-link { border-radius: var(--radius-sm); border-right: none; padding: 8px 14px; font-size: 13px; }
+      .admin-main { padding: 20px 16px; }
+      .form-grid { grid-template-columns: 1fr; }
+      .form-group.full { grid-column: 1; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ========== 헤더 ========== -->
+<header class="site-header">
+  <div class="header-inner">
+    <a href="index.html" class="logo">
+      <span class="logo-icon">📦</span>
+      <div class="logo-text">
+        <span class="logo-main">그림책 질문박스</span>
+        <span class="logo-sub">관리자 페이지</span>
+      </div>
+    </a>
+    <nav class="main-nav">
+      <a href="index.html" class="nav-link"><i class="fas fa-home"></i> 홈으로</a>
+      <span class="nav-link nav-admin"><i class="fas fa-cog"></i> 관리자</span>
+    </nav>
+    <button class="hamburger" id="hamburger" aria-label="메뉴 열기">
+      <i class="fas fa-bars"></i>
+    </button>
+  </div>
+</header>
+
+<!-- ========== 레이아웃 ========== -->
+<div class="admin-layout">
+
+  <!-- 사이드바 -->
+  <aside class="admin-sidebar">
+    <div class="sidebar-stat">
+      <p>전체 도서</p>
+      <strong id="sidebarBookCount">-</strong>
+    </div>
+    <p class="sidebar-title">메뉴</p>
+    <div class="sidebar-link active" data-panel="dashboard" onclick="switchPanel('dashboard', this)">
+      <i class="fas fa-chart-bar"></i> 대시보드
+    </div>
+    <div class="sidebar-link" data-panel="books" onclick="switchPanel('books', this)">
+      <i class="fas fa-book"></i> 도서 관리
+    </div>
+    <div class="sidebar-link" data-panel="addBook" onclick="openAddBook()">
+      <i class="fas fa-plus-circle"></i> 도서 추가
+    </div>
+    <p class="sidebar-title" style="margin-top:20px;">링크</p>
+    <a href="index.html" class="sidebar-link" target="_blank">
+      <i class="fas fa-external-link-alt"></i> 사이트 보기
+    </a>
+  </aside>
+
+  <!-- 메인 -->
+  <main class="admin-main">
+
+    <!-- 알림 -->
+    <div class="alert alert-success" id="alertSuccess">
+      <i class="fas fa-check-circle"></i>
+      <span id="alertSuccessText">저장되었습니다.</span>
+    </div>
+    <div class="alert alert-error" id="alertError">
+      <i class="fas fa-times-circle"></i>
+      <span id="alertErrorText">오류가 발생했습니다.</span>
+    </div>
+
+    <!-- ===== 대시보드 패널 ===== -->
+    <div class="admin-panel active" id="panel-dashboard">
+      <div class="admin-header">
+        <div>
+          <h1>📊 대시보드</h1>
+          <p>그림책 질문박스 현황을 한눈에 확인하세요.</p>
+        </div>
+      </div>
+
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-card-icon">📚</div>
+          <div class="stat-card-value" id="statTotal">-</div>
+          <div class="stat-card-label">전체 도서</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card-icon">⭐</div>
+          <div class="stat-card-value" id="statFeatured">-</div>
+          <div class="stat-card-label">추천 도서</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card-icon">💡</div>
+          <div class="stat-card-value" id="statQuestions">-</div>
+          <div class="stat-card-label">총 창의 질문 수</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card-icon">🗣️</div>
+          <div class="stat-card-value" id="statKidsQ">-</div>
+          <div class="stat-card-label">총 아이들 질문 수</div>
+        </div>
+      </div>
+
+      <!-- 연령대 분포 -->
+      <div style="background:#fff;border:1px solid var(--border-light);border-radius:var(--radius-lg);padding:24px;box-shadow:var(--shadow-sm);">
+        <h3 style="font-size:16px;font-weight:700;color:var(--text-dark);margin-bottom:16px;">연령대별 도서 현황</h3>
+        <div id="ageChart" style="display:flex;flex-direction:column;gap:12px;"></div>
+      </div>
+    </div>
+
+    <!-- ===== 도서 관리 패널 ===== -->
+    <div class="admin-panel" id="panel-books">
+      <div class="admin-header">
+        <div>
+          <h1>📚 도서 관리</h1>
+          <p>등록된 그림책을 확인하고 수정·삭제할 수 있습니다.</p>
+        </div>
+        <button class="btn btn-primary" onclick="openAddBook()">
+          <i class="fas fa-plus"></i> 도서 추가
+        </button>
+      </div>
+
+      <div class="admin-toolbar">
+        <input
+          type="text"
+          class="admin-search"
+          id="adminSearch"
+          placeholder="🔍 제목, 저자로 검색..."
+          oninput="filterAdminBooks(this.value)"
+        />
+        <span id="adminBookCount" style="font-size:13px;color:var(--text-muted)"></span>
+      </div>
+
+      <div class="admin-table-wrap">
+        <table class="admin-table" id="booksTable">
+          <thead>
+            <tr>
+              <th>표지</th>
+              <th>제목 / 저자</th>
+              <th>연령대</th>
+              <th>주제</th>
+              <th>창의Q</th>
+              <th>아이Q</th>
+              <th>추천</th>
+              <th>관리</th>
+            </tr>
+          </thead>
+          <tbody id="booksTableBody">
+            <tr><td colspan="8" class="table-empty">
+              <div class="empty-icon">📚</div>
+              <p>도서 목록을 불러오는 중...</p>
+            </td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- ========== 도서 추가/수정 모달 ========== -->
+<div class="modal-backdrop" id="bookModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 id="modalTitle">📖 도서 추가</h2>
+      <button class="modal-close" onclick="closeModal('bookModal')">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+    <div class="modal-body">
+      <form id="bookForm" onsubmit="return false;">
+        <input type="hidden" id="editBookId" />
+        <div class="form-grid">
+          <!-- 기본 정보 -->
+          <div class="form-group">
+            <label class="form-label">책 제목 <span>*</span></label>
+            <input type="text" class="form-input" id="fTitle" placeholder="예: 강아지똥" required />
+          </div>
+          <div class="form-group">
+            <label class="form-label">저자 <span>*</span></label>
+            <input type="text" class="form-input" id="fAuthor" placeholder="예: 권정생" required />
+          </div>
+          <div class="form-group">
+            <label class="form-label">그림 작가</label>
+            <input type="text" class="form-input" id="fIllustrator" placeholder="예: 정승각" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">출판사</label>
+            <input type="text" class="form-input" id="fPublisher" placeholder="예: 길벗어린이" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">출판연도</label>
+            <input type="number" class="form-input" id="fYear" placeholder="예: 2024" min="1900" max="2100" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">권장 연령대 <span>*</span></label>
+            <select class="form-select" id="fAgeRange" required>
+              <option value="">선택하세요</option>
+              <option value="유아(3-5세)">유아 (3-5세)</option>
+              <option value="저학년(6-8세)">저학년 (6-8세)</option>
+              <option value="중학년(9-10세)">중학년 (9-10세)</option>
+              <option value="고학년(11-13세)">고학년 (11-13세)</option>
+              <option value="전연령">전연령</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">표지 이모지</label>
+            <input type="text" class="form-input" id="fEmoji" placeholder="예: 🌼" />
+            <span class="form-hint">책의 느낌을 나타내는 이모지를 입력하세요</span>
+          </div>
+          <div class="form-group">
+            <label class="form-label">표지 배경색</label>
+            <div style="display:flex;gap:8px;align-items:center;">
+              <input type="color" id="fColorPicker" value="#EEF3FF" style="width:44px;height:40px;padding:2px;border:1.5px solid var(--border);border-radius:8px;cursor:pointer;" oninput="document.getElementById('fCoverColor').value=this.value" />
+              <input type="text" class="form-input" id="fCoverColor" placeholder="#EEF3FF" style="flex:1;" oninput="updateColorPicker(this.value)" />
+            </div>
+          </div>
+
+          <!-- 줄거리 -->
+          <div class="form-group full">
+            <label class="form-label">줄거리 요약</label>
+            <textarea class="form-textarea" id="fSynopsis" placeholder="책의 줄거리를 간략하게 적어주세요..."></textarea>
+          </div>
+
+          <!-- 주제 -->
+          <div class="form-group full">
+            <label class="form-label">주제 태그 <span class="form-hint" style="font-weight:400;text-transform:none;">(쉼표로 구분: 예: 용기, 우정)</span></label>
+            <input type="text" class="form-input" id="fThemes" placeholder="예: 생명, 자존감, 소중함" />
+          </div>
+
+          <!-- 키워드 -->
+          <div class="form-group full">
+            <label class="form-label">키워드 <span class="form-hint" style="font-weight:400;text-transform:none;">(쉼표로 구분)</span></label>
+            <input type="text" class="form-input" id="fKeywords" placeholder="예: 민들레, 쓸모, 존재" />
+          </div>
+
+          <!-- 창의 질문 -->
+          <div class="form-group full">
+            <label class="form-label">창의적 질문 (최대 5개)</label>
+            <div class="array-field" id="creativeQFields">
+              <!-- JS로 추가 -->
+            </div>
+            <button type="button" class="array-add-btn" onclick="addArrayField('creativeQFields', true)" style="margin-top:8px;">
+              <i class="fas fa-plus"></i> 질문 추가
+            </button>
+          </div>
+
+          <!-- 아이들 질문 -->
+          <div class="form-group full">
+            <label class="form-label">아이들 질문 리스트</label>
+            <div class="array-field" id="kidsQFields">
+              <!-- JS로 추가 -->
+            </div>
+            <button type="button" class="array-add-btn" onclick="addArrayField('kidsQFields', false)" style="margin-top:8px;">
+              <i class="fas fa-plus"></i> 질문 추가
+            </button>
+          </div>
+
+          <!-- 수업 팁 -->
+          <div class="form-group full">
+            <label class="form-label">강사 수업 팁</label>
+            <textarea class="form-textarea" id="fLessonTips" placeholder="수업에서 활용할 수 있는 팁이나 연계 활동을 적어주세요..." style="min-height:100px;"></textarea>
+          </div>
+
+          <!-- 추천 여부 -->
+          <div class="form-group full">
+            <label class="form-check">
+              <input type="checkbox" id="fFeatured" />
+              <span style="font-size:14px;font-weight:600;color:var(--text-dark);">⭐ 추천 도서로 등록</span>
+            </label>
+          </div>
+        </div>
+      </form>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('bookModal')">취소</button>
+      <button class="btn btn-primary" onclick="saveBook()">
+        <i class="fas fa-save"></i> 저장하기
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ========== 삭제 확인 모달 ========== -->
+<div class="modal-backdrop" id="confirmModal">
+  <div class="modal confirm-modal">
+    <div class="modal-body">
+      <div class="confirm-icon">🗑️</div>
+      <p class="confirm-title">정말 삭제할까요?</p>
+      <p class="confirm-desc" id="confirmDesc">이 도서를 삭제하면 복구할 수 없습니다.</p>
+    </div>
+    <div class="modal-footer" style="justify-content:center;">
+      <button class="btn btn-ghost" onclick="closeModal('confirmModal')">취소</button>
+      <button class="btn" id="confirmDeleteBtn"
+        style="background:#E53E3E;color:#fff;border-color:#E53E3E;"
+        onclick="executeDelete()">
+        <i class="fas fa-trash"></i> 삭제
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* =============================================
+   전역 상태
+   ============================================= */
+let allAdminBooks = [];
+let filteredAdminBooks = [];
+let deleteTargetId = null;
+let editingBookId = null;
+
+/* =============================================
+   초기화
+   ============================================= */
+document.addEventListener('DOMContentLoaded', async () => {
+  await loadAdminBooks();
+  updateDashboard();
+  renderAdminTable(allAdminBooks);
+});
+
+/* =============================================
+   데이터 로드
+   ============================================= */
+async function loadAdminBooks() {
+  try {
+    const res = await fetch('tables/books?limit=300&sort=title');
+    if (!res.ok) throw new Error();
+    const data = await res.json();
+    allAdminBooks = data.data || [];
+  } catch {
+    allAdminBooks = [];
+    showAlert('error', 'API 연결에 실패했습니다. 네트워크를 확인하세요.');
+  }
+  filteredAdminBooks = [...allAdminBooks];
+  updateSidebarCount();
+}
+
+function updateSidebarCount() {
+  const el = document.getElementById('sidebarBookCount');
+  if (el) el.textContent = allAdminBooks.length;
+}
+
+/* =============================================
+   대시보드
+   ============================================= */
+function updateDashboard() {
+  document.getElementById('statTotal').textContent = allAdminBooks.length;
+  document.getElementById('statFeatured').textContent = allAdminBooks.filter(b => b.is_featured).length;
+
+  const totalQ = allAdminBooks.reduce((s, b) => s + (b.creative_questions || []).length, 0);
+  const totalKQ = allAdminBooks.reduce((s, b) => s + (b.kids_questions || []).length, 0);
+  document.getElementById('statQuestions').textContent = totalQ;
+  document.getElementById('statKidsQ').textContent = totalKQ;
+
+  renderAgeChart();
+}
+
+function renderAgeChart() {
+  const chart = document.getElementById('ageChart');
+  if (!chart) return;
+  const ageMap = {};
+  allAdminBooks.forEach(b => {
+    const age = b.age_range || '미분류';
+    ageMap[age] = (ageMap[age] || 0) + 1;
+  });
+
+  const max = Math.max(...Object.values(ageMap), 1);
+  const colors = { '유아(3-5세)': '#FFB3CC', '저학년(6-8세)': '#A8C5F5', '중학년(9-10세)': '#FFD08A', '고학년(11-13세)': '#B5EAD7', '전연령': '#C7B3F5' };
+
+  chart.innerHTML = Object.entries(ageMap).map(([age, count]) => `
+    <div style="display:flex;align-items:center;gap:12px;">
+      <div style="width:120px;font-size:13px;color:var(--text-muted);flex-shrink:0;">${age}</div>
+      <div style="flex:1;height:28px;background:#F7F9FF;border-radius:6px;overflow:hidden;">
+        <div style="width:${(count/max)*100}%;height:100%;background:${colors[age]||'#A8C5F5'};border-radius:6px;display:flex;align-items:center;padding:0 10px;font-size:12px;font-weight:700;color:#2D3748;transition:width .5s ease;">
+          ${count}권
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+/* =============================================
+   테이블 렌더링
+   ============================================= */
+function renderAdminTable(books) {
+  const tbody = document.getElementById('booksTableBody');
+  const countEl = document.getElementById('adminBookCount');
+  if (countEl) countEl.textContent = `총 ${books.length}권`;
+
+  if (books.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="8" class="table-empty">
+      <div class="empty-icon">🔍</div>
+      <p>도서를 찾을 수 없습니다</p>
+    </td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = books.map(book => {
+    const themes = (book.themes || []).slice(0, 3).map(t =>
+      `<span class="mini-tag">${escHtml(t)}</span>`
+    ).join('');
+    const cq = (book.creative_questions || []).length;
+    const kq = (book.kids_questions || []).length;
+
+    return `
+      <tr>
+        <td>
+          <div class="book-mini-cover" style="background-color:${book.cover_color||'#EEF3FF'}">
+            ${book.cover_emoji||'📚'}
+          </div>
+        </td>
+        <td>
+          <p class="tbl-title">${escHtml(book.title)}</p>
+          <p class="tbl-author">${escHtml(book.author||'')}</p>
+        </td>
+        <td><span class="tbl-badge">${escHtml(book.age_range||'-')}</span></td>
+        <td><div class="tag-list">${themes}</div></td>
+        <td style="text-align:center;font-weight:700;color:var(--primary);">${cq}</td>
+        <td style="text-align:center;font-weight:700;color:var(--accent);">${kq}</td>
+        <td style="text-align:center;">${book.is_featured ? '<span class="tbl-badge featured">⭐ 추천</span>' : '-'}</td>
+        <td>
+          <div class="tbl-actions">
+            <button class="icon-btn" onclick="openEditBook('${escHtml(book.id)}')" title="수정">
+              <i class="fas fa-edit"></i>
+            </button>
+            <button class="icon-btn del" onclick="openDeleteConfirm('${escHtml(book.id)}','${escHtml(book.title)}')" title="삭제">
+              <i class="fas fa-trash"></i>
+            </button>
+          </div>
+        </td>
+      </tr>
+    `;
+  }).join('');
+}
+
+function filterAdminBooks(query) {
+  const q = query.toLowerCase();
+  filteredAdminBooks = q
+    ? allAdminBooks.filter(b =>
+        (b.title||'').toLowerCase().includes(q) ||
+        (b.author||'').toLowerCase().includes(q)
+      )
+    : [...allAdminBooks];
+  renderAdminTable(filteredAdminBooks);
+}
+
+/* =============================================
+   패널 전환
+   ============================================= */
+function switchPanel(panelName, el) {
+  document.querySelectorAll('.admin-panel').forEach(p => p.classList.remove('active'));
+  const panel = document.getElementById(`panel-${panelName}`);
+  if (panel) panel.classList.add('active');
+
+  document.querySelectorAll('.sidebar-link').forEach(l => l.classList.remove('active'));
+  if (el) el.classList.add('active');
+
+  if (panelName === 'books') renderAdminTable(filteredAdminBooks);
+  if (panelName === 'dashboard') updateDashboard();
+}
+
+/* =============================================
+   모달 열기/닫기
+   ============================================= */
+function openModal(id) {
+  document.getElementById(id).classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closeModal(id) {
+  document.getElementById(id).classList.remove('open');
+  document.body.style.overflow = '';
+  if (id === 'bookModal') clearForm();
+}
+
+// 외부 클릭 닫기
+document.querySelectorAll('.modal-backdrop').forEach(bd => {
+  bd.addEventListener('click', (e) => {
+    if (e.target === bd) closeModal(bd.id);
+  });
+});
+
+/* =============================================
+   폼 초기화
+   ============================================= */
+function clearForm() {
+  editingBookId = null;
+  document.getElementById('editBookId').value = '';
+  document.getElementById('modalTitle').textContent = '📖 도서 추가';
+  document.getElementById('fTitle').value = '';
+  document.getElementById('fAuthor').value = '';
+  document.getElementById('fIllustrator').value = '';
+  document.getElementById('fPublisher').value = '';
+  document.getElementById('fYear').value = '';
+  document.getElementById('fAgeRange').value = '';
+  document.getElementById('fEmoji').value = '';
+  document.getElementById('fCoverColor').value = '#EEF3FF';
+  document.getElementById('fColorPicker').value = '#EEF3FF';
+  document.getElementById('fSynopsis').value = '';
+  document.getElementById('fThemes').value = '';
+  document.getElementById('fKeywords').value = '';
+  document.getElementById('fLessonTips').value = '';
+  document.getElementById('fFeatured').checked = false;
+
+  // 배열 필드 초기화
+  document.getElementById('creativeQFields').innerHTML = '';
+  document.getElementById('kidsQFields').innerHTML = '';
+  addArrayField('creativeQFields', true);
+  addArrayField('kidsQFields', false);
+}
+
+/* =============================================
+   도서 추가 모달
+   ============================================= */
+function openAddBook() {
+  clearForm();
+  switchPanel('books', document.querySelector('[data-panel="books"]'));
+  openModal('bookModal');
+}
+
+/* =============================================
+   도서 수정 모달
+   ============================================= */
+function openEditBook(bookId) {
+  const book = allAdminBooks.find(b => b.id === bookId);
+  if (!book) return;
+
+  editingBookId = bookId;
+  document.getElementById('editBookId').value = bookId;
+  document.getElementById('modalTitle').textContent = `✏️ 도서 수정: ${book.title}`;
+
+  document.getElementById('fTitle').value = book.title || '';
+  document.getElementById('fAuthor').value = book.author || '';
+  document.getElementById('fIllustrator').value = book.illustrator || '';
+  document.getElementById('fPublisher').value = book.publisher || '';
+  document.getElementById('fYear').value = book.year || '';
+  document.getElementById('fAgeRange').value = book.age_range || '';
+  document.getElementById('fEmoji').value = book.cover_emoji || '';
+  const color = book.cover_color || '#EEF3FF';
+  document.getElementById('fCoverColor').value = color;
+  document.getElementById('fColorPicker').value = color;
+  document.getElementById('fSynopsis').value = book.synopsis || '';
+  document.getElementById('fThemes').value = (book.themes || []).join(', ');
+  document.getElementById('fKeywords').value = (book.keywords || []).join(', ');
+  document.getElementById('fLessonTips').value = book.lesson_tips || '';
+  document.getElementById('fFeatured').checked = !!book.is_featured;
+
+  // 배열 필드 채우기
+  const cqField = document.getElementById('creativeQFields');
+  cqField.innerHTML = '';
+  (book.creative_questions || []).forEach(q => addArrayField('creativeQFields', true, q));
+  if (cqField.children.length === 0) addArrayField('creativeQFields', true);
+
+  const kqField = document.getElementById('kidsQFields');
+  kqField.innerHTML = '';
+  (book.kids_questions || []).forEach(q => addArrayField('kidsQFields', false, q));
+  if (kqField.children.length === 0) addArrayField('kidsQFields', false);
+
+  openModal('bookModal');
+}
+
+/* =============================================
+   배열 필드 추가
+   ============================================= */
+function addArrayField(containerId, isTextarea = false, value = '') {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+
+  const row = document.createElement('div');
+  row.className = 'array-row';
+
+  if (isTextarea) {
+    row.innerHTML = `
+      <textarea class="form-input" rows="2" placeholder="질문을 입력하세요...">${escHtml(value)}</textarea>
+      <button type="button" class="array-del-btn" onclick="this.parentElement.remove()" title="삭제">
+        <i class="fas fa-times"></i>
+      </button>
+    `;
+  } else {
+    row.innerHTML = `
+      <input type="text" class="form-input" placeholder="질문을 입력하세요..." value="${escHtml(value)}" />
+      <button type="button" class="array-del-btn" onclick="this.parentElement.remove()" title="삭제">
+        <i class="fas fa-times"></i>
+      </button>
+    `;
+  }
+  container.appendChild(row);
+}
+
+function updateColorPicker(hexValue) {
+  if (/^#[0-9A-Fa-f]{6}$/.test(hexValue)) {
+    document.getElementById('fColorPicker').value = hexValue;
+  }
+}
+
+/* =============================================
+   도서 저장 (추가/수정)
+   ============================================= */
+async function saveBook() {
+  const title = document.getElementById('fTitle').value.trim();
+  const author = document.getElementById('fAuthor').value.trim();
+  const ageRange = document.getElementById('fAgeRange').value;
+
+  if (!title || !author || !ageRange) {
+    showAlert('error', '제목, 저자, 연령대는 필수 입력 항목입니다.');
+    return;
+  }
+
+  // 배열 필드 수집
+  const creativeQs = collectArrayField('creativeQFields').filter(v => v.trim());
+  const kidsQs = collectArrayField('kidsQFields').filter(v => v.trim());
+
+  const bookData = {
+    title,
+    author,
+    illustrator: document.getElementById('fIllustrator').value.trim(),
+    publisher: document.getElementById('fPublisher').value.trim(),
+    year: parseInt(document.getElementById('fYear').value) || null,
+    age_range: ageRange,
+    cover_emoji: document.getElementById('fEmoji').value.trim() || '📚',
+    cover_color: document.getElementById('fCoverColor').value.trim() || '#EEF3FF',
+    synopsis: document.getElementById('fSynopsis').value.trim(),
+    themes: parseCommaSeparated(document.getElementById('fThemes').value),
+    keywords: parseCommaSeparated(document.getElementById('fKeywords').value),
+    creative_questions: creativeQs,
+    kids_questions: kidsQs,
+    lesson_tips: document.getElementById('fLessonTips').value.trim(),
+    is_featured: document.getElementById('fFeatured').checked
+  };
+
+  try {
+    let res;
+    if (editingBookId) {
+      // 수정
+      res = await fetch(`tables/books/${editingBookId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(bookData)
+      });
+    } else {
+      // 추가 — 고유 ID 생성
+      bookData.id = 'book_' + Date.now();
+      res = await fetch('tables/books', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(bookData)
+      });
+    }
+
+    if (!res.ok) throw new Error(`서버 오류 ${res.status}`);
+    const saved = await res.json();
+
+    if (editingBookId) {
+      const idx = allAdminBooks.findIndex(b => b.id === editingBookId);
+      if (idx !== -1) allAdminBooks[idx] = saved;
+    } else {
+      allAdminBooks.unshift(saved);
+    }
+
+    filteredAdminBooks = [...allAdminBooks];
+    renderAdminTable(filteredAdminBooks);
+    updateDashboard();
+    updateSidebarCount();
+    closeModal('bookModal');
+    showAlert('success', editingBookId ? '도서가 수정되었습니다.' : '도서가 추가되었습니다.');
+
+  } catch (err) {
+    showAlert('error', `저장 실패: ${err.message}`);
+  }
+}
+
+function collectArrayField(containerId) {
+  const container = document.getElementById(containerId);
+  if (!container) return [];
+  return Array.from(container.querySelectorAll('input, textarea')).map(el => el.value);
+}
+
+function parseCommaSeparated(str) {
+  return str.split(',').map(s => s.trim()).filter(Boolean);
+}
+
+/* =============================================
+   도서 삭제
+   ============================================= */
+function openDeleteConfirm(bookId, bookTitle) {
+  deleteTargetId = bookId;
+  const desc = document.getElementById('confirmDesc');
+  if (desc) desc.textContent = `"${bookTitle}" 도서를 삭제하면 복구할 수 없습니다.`;
+  openModal('confirmModal');
+}
+
+async function executeDelete() {
+  if (!deleteTargetId) return;
+  try {
+    const res = await fetch(`tables/books/${deleteTargetId}`, { method: 'DELETE' });
+    if (res.ok || res.status === 204) {
+      allAdminBooks = allAdminBooks.filter(b => b.id !== deleteTargetId);
+      filteredAdminBooks = filteredAdminBooks.filter(b => b.id !== deleteTargetId);
+      renderAdminTable(filteredAdminBooks);
+      updateDashboard();
+      updateSidebarCount();
+      closeModal('confirmModal');
+      showAlert('success', '도서가 삭제되었습니다.');
+    } else {
+      throw new Error(`서버 오류 ${res.status}`);
+    }
+  } catch (err) {
+    closeModal('confirmModal');
+    showAlert('error', `삭제 실패: ${err.message}`);
+  }
+  deleteTargetId = null;
+}
+
+/* =============================================
+   알림
+   ============================================= */
+function showAlert(type, message) {
+  const el = document.getElementById(type === 'success' ? 'alertSuccess' : 'alertError');
+  const textEl = document.getElementById(type === 'success' ? 'alertSuccessText' : 'alertErrorText');
+  if (!el || !textEl) return;
+  textEl.textContent = message;
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 3500);
+  el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+/* =============================================
+   유틸
+   ============================================= */
+function escHtml(str) {
+  if (!str) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+</script>
+</body>
+</html>

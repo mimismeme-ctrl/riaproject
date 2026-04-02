@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>그림책 질문박스 📦 — 초등 창의논술 수업 플랫폼</title>
+  <meta name="description" content="300권의 그림책에서 엄선한 창의 질문과 아이들의 대답을 모았습니다. 주제별·키워드별 검색으로 딱 맞는 수업 자료를 찾아보세요." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" />
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+<!-- ========== 헤더 ========== -->
+<header class="site-header" id="siteHeader">
+  <div class="header-inner">
+    <a href="index.html" class="logo">
+      <span class="logo-icon">📦</span>
+      <div class="logo-text">
+        <span class="logo-main">그림책 질문박스</span>
+        <span class="logo-sub">창의논술 수업을 위한 질문 아카이브</span>
+      </div>
+    </a>
+    <nav class="main-nav">
+      <a href="index.html" class="nav-link active">홈</a>
+      <a href="#books-section" class="nav-link">도서 목록</a>
+      <a href="#today-question" class="nav-link">오늘의 질문</a>
+      <a href="#about" class="nav-link">소개</a>
+      <a href="admin.html" class="nav-link nav-admin">
+        <i class="fas fa-cog"></i> 관리
+      </a>
+    </nav>
+    <button class="hamburger" id="hamburger" aria-label="메뉴 열기">
+      <i class="fas fa-bars"></i>
+    </button>
+  </div>
+  <!-- 모바일 메뉴 -->
+  <nav class="mobile-nav" id="mobileNav">
+    <a href="index.html" class="nav-link active">홈</a>
+    <a href="#books-section" class="nav-link">도서 목록</a>
+    <a href="#today-question" class="nav-link">오늘의 질문</a>
+    <a href="#about" class="nav-link">소개</a>
+    <a href="admin.html" class="nav-link">⚙️ 관리자</a>
+  </nav>
+</header>
+
+<!-- ========== 히어로 배너 ========== -->
+<section class="hero">
+  <div class="hero-content">
+    <div class="hero-badge"><i class="fas fa-star"></i> 초등 창의논술 전문 플랫폼</div>
+    <h1 class="hero-title">
+      좋은 질문 하나가<br />
+      <span class="highlight">생각을 열어요</span>
+    </h1>
+    <p class="hero-desc">
+      300권의 그림책에서 엄선한 창의 질문과 아이들의 대답을 모았습니다.<br />
+      주제별·키워드별 검색으로 딱 맞는 수업 자료를 찾아보세요.
+    </p>
+    <div class="hero-actions">
+      <a href="#books-section" class="btn btn-primary">
+        <i class="fas fa-search"></i> 도서 탐색하기
+      </a>
+      <a href="#today-question" class="btn btn-outline">
+        <i class="fas fa-lightbulb"></i> 오늘의 질문 보기
+      </a>
+    </div>
+    <div class="hero-stats">
+      <div class="stat-item">
+        <span class="stat-num" id="totalBooks">0</span>
+        <span class="stat-label">그림책</span>
+      </div>
+      <div class="stat-divider">|</div>
+      <div class="stat-item">
+        <span class="stat-num">12+</span>
+        <span class="stat-label">주제 분류</span>
+      </div>
+      <div class="stat-divider">|</div>
+      <div class="stat-item">
+        <span class="stat-num">300+</span>
+        <span class="stat-label">창의 질문</span>
+      </div>
+    </div>
+  </div>
+  <div class="hero-visual">
+    <div class="floating-cards">
+      <div class="float-card fc1">📚</div>
+      <div class="float-card fc2">💡</div>
+      <div class="float-card fc3">🌱</div>
+      <div class="float-card fc4">🎨</div>
+      <div class="float-card fc5">❓</div>
+    </div>
+  </div>
+</section>
+
+<!-- ========== 오늘의 창의 질문 ========== -->
+<section class="today-question-section" id="today-question">
+  <div class="container">
+    <div class="section-label">
+      <i class="fas fa-lightbulb"></i> 오늘의 창의 질문
+    </div>
+    <div class="today-card" id="todayCard">
+      <div class="today-card-inner">
+        <div class="today-book-emoji" id="todayEmoji">📚</div>
+        <div class="today-content">
+          <p class="today-book-title" id="todayBookTitle">로딩 중...</p>
+          <p class="today-question-text" id="todayQuestionText">질문을 불러오는 중입니다...</p>
+          <div class="today-actions">
+            <a href="#" class="btn btn-sm btn-primary" id="todayBookLink">
+              <i class="fas fa-book-open"></i> 책 자세히 보기
+            </a>
+            <button class="btn btn-sm btn-ghost" id="refreshQuestion" onclick="loadTodayQuestion()">
+              <i class="fas fa-shuffle"></i> 다른 질문 보기
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ========== 검색 & 필터 ========== -->
+<section class="search-section" id="books-section">
+  <div class="container">
+    <div class="section-header">
+      <h2 class="section-title">그림책 탐색</h2>
+      <p class="section-desc">주제, 키워드, 연령대로 수업에 맞는 그림책을 찾아보세요.</p>
+    </div>
+
+    <!-- 검색바 -->
+    <div class="search-bar-wrap">
+      <div class="search-bar">
+        <i class="fas fa-search search-icon"></i>
+        <input
+          type="text"
+          id="searchInput"
+          class="search-input"
+          placeholder="책 제목, 저자, 키워드로 검색..."
+          autocomplete="off"
+        />
+        <button class="search-clear" id="searchClear" title="지우기">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- 주제별 필터 -->
+    <div class="filter-wrap">
+      <div class="filter-group">
+        <span class="filter-label">📌 주제</span>
+        <div class="filter-chips" id="themeFilters">
+          <button class="chip active" data-filter="all" data-type="theme">전체</button>
+          <button class="chip" data-filter="용기" data-type="theme">💪 용기</button>
+          <button class="chip" data-filter="우정" data-type="theme">🤝 우정</button>
+          <button class="chip" data-filter="가족" data-type="theme">👨‍👩‍👧 가족</button>
+          <button class="chip" data-filter="감정" data-type="theme">😊 감정</button>
+          <button class="chip" data-filter="상상력" data-type="theme">🌈 상상력</button>
+          <button class="chip" data-filter="사랑" data-type="theme">❤️ 사랑</button>
+          <button class="chip" data-filter="자아" data-type="theme">🪞 자아</button>
+          <button class="chip" data-filter="환경" data-type="theme">🌿 환경</button>
+          <button class="chip" data-filter="예술" data-type="theme">🎨 예술</button>
+          <button class="chip" data-filter="나눔" data-type="theme">🎁 나눔</button>
+          <button class="chip" data-filter="성장" data-type="theme">🌱 성장</button>
+          <button class="chip" data-filter="규칙" data-type="theme">📋 규칙</button>
+          <button class="chip" data-filter="생명" data-type="theme">🌼 생명</button>
+          <button class="chip" data-filter="협력" data-type="theme">🤲 협력</button>
+        </div>
+      </div>
+
+      <div class="filter-group">
+        <span class="filter-label">🎂 연령대</span>
+        <div class="filter-chips" id="ageFilters">
+          <button class="chip active" data-filter="all" data-type="age">전체</button>
+          <button class="chip" data-filter="유아(3-5세)" data-type="age">🐣 3-5세</button>
+          <button class="chip" data-filter="저학년(6-8세)" data-type="age">🌟 6-8세</button>
+          <button class="chip" data-filter="중학년(9-10세)" data-type="age">📖 9-10세</button>
+          <button class="chip" data-filter="고학년(11-13세)" data-type="age">🎓 11-13세</button>
+        </div>
+      </div>
+
+      <div class="filter-result-bar">
+        <span id="resultCount" class="result-count">전체 도서 표시 중</span>
+        <div class="sort-select-wrap">
+          <select class="sort-select" id="sortSelect">
+            <option value="default">기본 정렬</option>
+            <option value="title">제목순</option>
+            <option value="year_desc">최신순</option>
+            <option value="year_asc">연도순</option>
+          </select>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ========== 도서 그리드 ========== -->
+<section class="books-grid-section">
+  <div class="container">
+    <!-- 추천 도서 배너 (featured) -->
+    <div class="featured-banner" id="featuredBanner">
+      <div class="featured-label"><i class="fas fa-star"></i> 이 달의 추천 도서</div>
+      <div class="featured-scroll" id="featuredScroll"></div>
+    </div>
+
+    <!-- 로딩 스피너 -->
+    <div class="loading-spinner" id="loadingSpinner">
+      <div class="spinner-icon">📚</div>
+      <p>그림책을 불러오는 중이에요...</p>
+    </div>
+
+    <!-- 도서 카드 그리드 -->
+    <div class="books-grid" id="booksGrid" style="display:none;">
+      <!-- 카드들이 JS로 동적 삽입됩니다 -->
+    </div>
+
+    <!-- 빈 상태 -->
+    <div class="empty-state" id="emptyState" style="display:none;">
+      <div class="empty-icon">🔍</div>
+      <p class="empty-title">검색 결과가 없어요</p>
+      <p class="empty-desc">다른 키워드나 필터를 시도해보세요.</p>
+      <button class="btn btn-outline" onclick="resetFilters()">필터 초기화</button>
+    </div>
+
+    <!-- 페이지네이션 -->
+    <div class="pagination" id="pagination"></div>
+  </div>
+</section>
+
+<!-- ========== 소개 섹션 ========== -->
+<section class="about-section" id="about">
+  <div class="container">
+    <div class="section-header" style="text-align:center; margin-bottom:48px;">
+      <h2 class="section-title">그림책 질문박스란?</h2>
+      <p class="section-desc">초등 창의논술 강사를 위한 통합 수업 자료 플랫폼입니다.</p>
+    </div>
+    <div class="about-grid">
+      <div class="about-card">
+        <div class="about-icon">🔍</div>
+        <h3>주제별 검색</h3>
+        <p>용기, 우정, 가족, 환경 등 12개 이상의 주제와 다양한 키워드로 원하는 그림책을 빠르게 찾을 수 있어요.</p>
+      </div>
+      <div class="about-card">
+        <div class="about-icon">💡</div>
+        <h3>창의 질문 3종 세트</h3>
+        <p>각 그림책마다 강사가 직접 개발한 창의적 질문 3개가 준비되어 있어요. 아이들의 사고력을 키워주는 깊은 질문들이에요.</p>
+      </div>
+      <div class="about-card">
+        <div class="about-icon">🗣️</div>
+        <h3>아이들의 목소리</h3>
+        <p>실제 수업에서 나온 아이들의 질문과 다양한 답변을 아카이브했어요. 수업 준비의 생생한 참고 자료가 됩니다.</p>
+      </div>
+      <div class="about-card">
+        <div class="about-icon">📱</div>
+        <h3>어디서든 열람</h3>
+        <p>모바일, 태블릿, PC 어디서든 최적화된 화면으로 수업 전날 빠르게 확인하세요.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ========== 푸터 ========== -->
+<footer class="site-footer">
+  <div class="container">
+    <div class="footer-inner">
+      <div class="footer-top">
+        <div class="footer-brand">
+          <span class="logo-icon">📦</span>
+          <span class="footer-brand-name">그림책 질문박스</span>
+        </div>
+        <div class="footer-links">
+          <a href="admin.html" class="footer-link"><i class="fas fa-cog"></i> 관리자</a>
+        </div>
+      </div>
+      <p class="footer-desc">초등 창의논술 수업을 위한 그림책 질문 아카이브</p>
+      <p class="footer-copy">© 2025 그림책 질문박스. 모든 권리 보유.</p>
+    </div>
+  </div>
+</footer>
+
+<!-- 스크롤 Top 버튼 -->
+<button class="scroll-top" id="scrollTop" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="맨 위로">
+  <i class="fas fa-chevron-up"></i>
+</button>
+
+<script src="js/data.js"></script>
+<script src="js/main.js"></script>
+</body>
+</html>

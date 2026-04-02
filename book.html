@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>책 상세보기 | 그림책 질문박스 📦</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" />
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+<!-- ========== 헤더 ========== -->
+<header class="site-header">
+  <div class="header-inner">
+    <a href="index.html" class="logo">
+      <span class="logo-icon">📦</span>
+      <div class="logo-text">
+        <span class="logo-main">그림책 질문박스</span>
+        <span class="logo-sub">창의논술 수업을 위한 질문 아카이브</span>
+      </div>
+    </a>
+    <nav class="main-nav">
+      <a href="index.html" class="nav-link">홈</a>
+      <a href="index.html#books-section" class="nav-link">도서 목록</a>
+      <a href="index.html#today-question" class="nav-link">오늘의 질문</a>
+      <a href="index.html#about" class="nav-link">소개</a>
+      <a href="admin.html" class="nav-link nav-admin">
+        <i class="fas fa-cog"></i> 관리
+      </a>
+    </nav>
+    <button class="hamburger" id="hamburger" aria-label="메뉴 열기">
+      <i class="fas fa-bars"></i>
+    </button>
+  </div>
+  <nav class="mobile-nav" id="mobileNav">
+    <a href="index.html" class="nav-link">홈</a>
+    <a href="index.html#books-section" class="nav-link">도서 목록</a>
+    <a href="index.html#today-question" class="nav-link">오늘의 질문</a>
+    <a href="index.html#about" class="nav-link">소개</a>
+    <a href="admin.html" class="nav-link">⚙️ 관리자</a>
+  </nav>
+</header>
+
+<!-- ========== 브레드크럼 ========== -->
+<div class="breadcrumb-bar">
+  <div class="container">
+    <a href="index.html" class="breadcrumb-link"><i class="fas fa-home"></i> 홈</a>
+    <span class="breadcrumb-sep"><i class="fas fa-chevron-right"></i></span>
+    <a href="index.html#books-section" class="breadcrumb-link">도서 목록</a>
+    <span class="breadcrumb-sep"><i class="fas fa-chevron-right"></i></span>
+    <span class="breadcrumb-current" id="breadcrumbTitle">책 상세</span>
+  </div>
+</div>
+
+<!-- ========== 책 정보 헤더 ========== -->
+<section class="book-hero" id="bookHero">
+  <div class="container">
+    <div class="book-hero-inner">
+      <!-- 표지 -->
+      <div class="book-cover-wrap">
+        <div class="book-cover" id="bookCover">
+          <span class="book-cover-emoji" id="bookCoverEmoji">📚</span>
+        </div>
+        <div class="book-badges" id="bookBadges"></div>
+      </div>
+
+      <!-- 정보 -->
+      <div class="book-info">
+        <div class="book-meta-top">
+          <span class="book-age-badge" id="bookAgeBadge">연령대</span>
+          <span class="book-year" id="bookYear">출판연도</span>
+        </div>
+        <h1 class="book-title" id="bookTitle">그림책 제목</h1>
+        <p class="book-author" id="bookAuthor">저자 · 출판사</p>
+        <p class="book-synopsis" id="bookSynopsis">줄거리</p>
+
+        <!-- 주제 태그 -->
+        <div class="book-themes" id="bookThemes"></div>
+        <!-- 키워드 -->
+        <div class="book-keywords" id="bookKeywords"></div>
+
+        <div class="book-header-actions">
+          <button class="btn btn-sm btn-ghost" onclick="window.history.back()">
+            <i class="fas fa-arrow-left"></i> 목록으로
+          </button>
+          <button class="btn btn-sm btn-outline" onclick="copyBookLink()">
+            <i class="fas fa-link"></i> 링크 복사
+          </button>
+          <button class="btn btn-sm btn-outline" onclick="printPage()">
+            <i class="fas fa-print"></i> 인쇄
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ========== 탭 메뉴 ========== -->
+<div class="tab-bar sticky-tab" id="tabBar">
+  <div class="container">
+    <div class="tabs">
+      <button class="tab-btn active" data-tab="creative">
+        <i class="fas fa-lightbulb"></i> 창의 질문
+        <span class="tab-count">3</span>
+      </button>
+      <button class="tab-btn" data-tab="kids">
+        <i class="fas fa-child"></i> 아이들 질문
+        <span class="tab-count" id="kidsQCount">-</span>
+      </button>
+      <button class="tab-btn" data-tab="guide">
+        <i class="fas fa-chalkboard-teacher"></i> 수업 가이드
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ========== 탭 콘텐츠 ========== -->
+<div class="tab-content-wrap">
+  <div class="container">
+
+    <!-- 창의 질문 탭 -->
+    <div class="tab-panel active" id="tab-creative">
+      <div class="panel-intro">
+        <div class="panel-intro-icon">💡</div>
+        <div>
+          <h2 class="panel-title">강사의 창의적 질문 3</h2>
+          <p class="panel-desc">아이들의 깊은 사고와 창의적 표현을 이끌어내기 위해 개발된 질문입니다. 각 질문을 클릭하면 다양한 답변 사례를 볼 수 있어요.</p>
+        </div>
+      </div>
+      <div class="questions-list" id="creativeQuestions">
+        <!-- JS로 삽입 -->
+      </div>
+    </div>
+
+    <!-- 아이들 질문 탭 -->
+    <div class="tab-panel" id="tab-kids">
+      <div class="panel-intro">
+        <div class="panel-intro-icon">🗣️</div>
+        <div>
+          <h2 class="panel-title">아이들의 질문 리스트</h2>
+          <p class="panel-desc">실제 수업에서 아이들이 직접 만들어낸 질문들입니다. 아이들의 시선과 궁금증을 확인해 보세요.</p>
+        </div>
+      </div>
+      <div class="questions-list" id="kidsQuestions">
+        <!-- JS로 삽입 -->
+      </div>
+    </div>
+
+    <!-- 수업 가이드 탭 -->
+    <div class="tab-panel" id="tab-guide">
+      <div class="panel-intro">
+        <div class="panel-intro-icon">📋</div>
+        <div>
+          <h2 class="panel-title">수업 활용 가이드</h2>
+          <p class="panel-desc">이 그림책을 수업에서 효과적으로 활용하는 방법을 안내합니다.</p>
+        </div>
+      </div>
+
+      <!-- 강사 맞춤 팁 -->
+      <div class="lesson-tips-box" id="lessonTipsBox" style="display:none;">
+        <div class="tips-header"><i class="fas fa-chalkboard-teacher"></i> 강사 맞춤 수업 팁</div>
+        <p class="tips-text" id="lessonTipsText"></p>
+      </div>
+
+      <div class="guide-grid">
+        <div class="guide-card">
+          <div class="guide-card-header">
+            <span class="guide-step">STEP 1</span>
+            <h3>책 읽기 전</h3>
+          </div>
+          <ul class="guide-list">
+            <li>표지를 보며 어떤 이야기일지 예측해보기</li>
+            <li>제목과 관련된 경험 나누기</li>
+            <li>주인공에게 어떤 일이 생길지 상상하기</li>
+          </ul>
+        </div>
+        <div class="guide-card">
+          <div class="guide-card-header">
+            <span class="guide-step">STEP 2</span>
+            <h3>책 읽는 중</h3>
+          </div>
+          <ul class="guide-list">
+            <li>중요한 장면에서 잠시 멈추고 질문하기</li>
+            <li>등장인물의 감정 추측하기</li>
+            <li>다음에 어떤 일이 일어날지 예측하기</li>
+          </ul>
+        </div>
+        <div class="guide-card">
+          <div class="guide-card-header">
+            <span class="guide-step">STEP 3</span>
+            <h3>책 읽은 후</h3>
+          </div>
+          <ul class="guide-list">
+            <li>창의 질문으로 깊이 있는 토론하기</li>
+            <li>아이들이 직접 질문 만들어보기</li>
+            <li>자신의 경험과 연결하여 글쓰기</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- 추후 업데이트 예정 영역 -->
+      <div class="coming-soon-box">
+        <div class="coming-soon-icon">🚀</div>
+        <div class="coming-soon-content">
+          <h3>추가 기능 업데이트 예정</h3>
+          <p>아래 기능들이 곧 추가될 예정입니다:</p>
+          <ul class="coming-soon-list">
+            <li><i class="fas fa-clock"></i> <strong>수업 플랜 PDF 다운로드</strong> — 수업 설계서를 자동으로 생성하여 출력 가능</li>
+            <li><i class="fas fa-clock"></i> <strong>활동지 템플릿</strong> — 학년별 맞춤 활동지 제공</li>
+            <li><i class="fas fa-clock"></i> <strong>수업 후기 공유</strong> — 다른 강사들의 수업 사례 열람 및 등록</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ========== 답변 추가 예정 영역 ========== -->
+<div class="answer-add-section">
+  <div class="container">
+    <div class="coming-soon-box answer-add-placeholder">
+      <div class="coming-soon-icon">✏️</div>
+      <div class="coming-soon-content">
+        <h3>답변 추가 기능 — 업데이트 예정</h3>
+        <p>아이들의 다양한 답변을 직접 입력하고 관리하는 기능이 곧 추가됩니다.<br />현재는 기존에 수집된 답변 데이터를 열람하실 수 있습니다.</p>
+        <button class="btn btn-outline btn-sm" disabled>
+          <i class="fas fa-plus"></i> 답변 추가하기 (준비 중)
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ========== 관련 도서 ========== -->
+<section class="related-books-section">
+  <div class="container">
+    <h2 class="section-title-sm">같은 주제의 다른 그림책</h2>
+    <div class="related-books-grid" id="relatedBooks">
+      <!-- JS로 삽입 -->
+    </div>
+  </div>
+</section>
+
+<!-- ========== 푸터 ========== -->
+<footer class="site-footer">
+  <div class="container">
+    <div class="footer-inner">
+      <div class="footer-top">
+        <div class="footer-brand">
+          <span class="logo-icon">📦</span>
+          <span class="footer-brand-name">그림책 질문박스</span>
+        </div>
+        <div class="footer-links">
+          <a href="admin.html" class="footer-link"><i class="fas fa-cog"></i> 관리자</a>
+        </div>
+      </div>
+      <p class="footer-desc">초등 창의논술 수업을 위한 그림책 질문 아카이브</p>
+      <p class="footer-copy">© 2025 그림책 질문박스. 모든 권리 보유.</p>
+    </div>
+  </div>
+</footer>
+
+<!-- 스크롤 Top 버튼 -->
+<button class="scroll-top" id="scrollTop" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="맨 위로">
+  <i class="fas fa-chevron-up"></i>
+</button>
+
+<script src="js/data.js"></script>
+<script src="js/book.js"></script>
+</body>
+</html>
