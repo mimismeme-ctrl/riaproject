@@ -1,0 +1,778 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>로그인 / 회원가입 | 그림책 질문박스 📦</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" />
+  <link rel="stylesheet" href="css/style.css" />
+  <script src="js/supabase.js"></script>
+  <script src="js/auth.js" defer></script>
+  <style>
+    /* ── 페이지 전체 레이아웃 ── */
+    body { background: var(--bg-main); }
+
+    .auth-page {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 40px 20px;
+    }
+
+    .auth-wrap {
+      width: 100%;
+      max-width: 460px;
+    }
+
+    /* ── 로고 영역 ── */
+    .auth-logo {
+      text-align: center;
+      margin-bottom: 32px;
+    }
+    .auth-logo a {
+      display: inline-flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      text-decoration: none;
+    }
+    .auth-logo-icon {
+      font-size: 48px;
+      line-height: 1;
+    }
+    .auth-logo-name {
+      font-size: 20px;
+      font-weight: 900;
+      color: var(--primary-dark);
+    }
+    .auth-logo-sub {
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-top: -4px;
+    }
+
+    /* ── 카드 ── */
+    .auth-card {
+      background: #fff;
+      border-radius: var(--radius-xl);
+      box-shadow: 0 8px 40px rgba(108,158,232,.13);
+      overflow: hidden;
+    }
+
+    /* ── 탭 (로그인 / 회원가입) ── */
+    .auth-tabs {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      border-bottom: 1px solid var(--border-light);
+    }
+    .auth-tab {
+      padding: 18px;
+      text-align: center;
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: all var(--transition);
+      border-bottom: 3px solid transparent;
+      margin-bottom: -1px;
+      background: none;
+      border-left: none;
+      border-right: none;
+      border-top: none;
+    }
+    .auth-tab:hover { color: var(--primary); }
+    .auth-tab.active {
+      color: var(--primary-dark);
+      border-bottom-color: var(--primary);
+      background: #FAFCFF;
+    }
+
+    /* ── 패널 ── */
+    .auth-panel { display: none; padding: 36px 36px 32px; }
+    .auth-panel.active { display: block; }
+
+    .auth-panel-title {
+      font-size: 22px;
+      font-weight: 900;
+      color: var(--text-dark);
+      margin-bottom: 6px;
+    }
+    .auth-panel-desc {
+      font-size: 14px;
+      color: var(--text-muted);
+      margin-bottom: 28px;
+      line-height: 1.6;
+    }
+
+    /* ── 폼 요소 ── */
+    .auth-form { display: flex; flex-direction: column; gap: 18px; }
+
+    .form-field { display: flex; flex-direction: column; gap: 6px; }
+    .form-field label {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text-dark);
+      text-transform: uppercase;
+      letter-spacing: .06em;
+    }
+    .form-field label .req { color: #E53E3E; margin-left: 2px; }
+
+    .input-wrap {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+    .input-wrap i {
+      position: absolute;
+      left: 14px;
+      color: var(--text-light);
+      font-size: 14px;
+      pointer-events: none;
+    }
+    .input-wrap input {
+      width: 100%;
+      padding: 12px 14px 12px 40px;
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-md);
+      font-size: 14px;
+      font-family: var(--font);
+      color: var(--text-dark);
+      background: #fff;
+      transition: all var(--transition);
+    }
+    .input-wrap input:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(108,158,232,.12);
+    }
+    .input-wrap input.error { border-color: #E53E3E; }
+    .input-wrap .toggle-pw {
+      position: absolute;
+      right: 12px;
+      background: none;
+      border: none;
+      color: var(--text-light);
+      cursor: pointer;
+      font-size: 14px;
+      padding: 4px;
+    }
+    .input-wrap .toggle-pw:hover { color: var(--primary); }
+
+    .field-hint {
+      font-size: 11px;
+      color: var(--text-light);
+    }
+    .field-error {
+      font-size: 12px;
+      color: #E53E3E;
+      display: none;
+    }
+    .field-error.show { display: block; }
+
+    /* 비밀번호 강도 바 */
+    .pw-strength {
+      height: 4px;
+      border-radius: 2px;
+      background: var(--border-light);
+      overflow: hidden;
+      margin-top: 6px;
+    }
+    .pw-strength-bar {
+      height: 100%;
+      border-radius: 2px;
+      width: 0%;
+      transition: width .3s, background .3s;
+    }
+    .pw-strength-label {
+      font-size: 11px;
+      margin-top: 4px;
+    }
+
+    /* ── 제출 버튼 ── */
+    .auth-submit {
+      width: 100%;
+      padding: 14px;
+      background: var(--primary);
+      color: #fff;
+      border: none;
+      border-radius: var(--radius-md);
+      font-size: 15px;
+      font-weight: 700;
+      font-family: var(--font);
+      cursor: pointer;
+      transition: all var(--transition);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      margin-top: 4px;
+    }
+    .auth-submit:hover { background: var(--primary-dark); transform: translateY(-1px); }
+    .auth-submit:active { transform: translateY(0); }
+    .auth-submit:disabled { background: var(--border); cursor: not-allowed; transform: none; }
+    .auth-submit .spinner {
+      width: 16px; height: 16px;
+      border: 2px solid rgba(255,255,255,.4);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin .6s linear infinite;
+      display: none;
+    }
+    .auth-submit.loading .spinner { display: inline-block; }
+    .auth-submit.loading .btn-text { opacity: .6; }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── 하단 링크 ── */
+    .auth-footer-link {
+      text-align: center;
+      margin-top: 20px;
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+    .auth-footer-link a, .auth-footer-link button {
+      color: var(--primary-dark);
+      font-weight: 700;
+      text-decoration: none;
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-family: var(--font);
+      font-size: 13px;
+    }
+    .auth-footer-link a:hover, .auth-footer-link button:hover { text-decoration: underline; }
+
+    /* ── 알림 배너 ── */
+    .auth-alert {
+      padding: 12px 16px;
+      border-radius: var(--radius-sm);
+      font-size: 13px;
+      font-weight: 600;
+      display: none;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 20px;
+    }
+    .auth-alert.show { display: flex; }
+    .auth-alert.success { background: #F0FFF4; color: #276749; border: 1px solid #9AE6B4; }
+    .auth-alert.error   { background: #FFF5F5; color: #C53030; border: 1px solid #FCA5A5; }
+    .auth-alert.info    { background: #EBF8FF; color: #2B6CB0; border: 1px solid #90CDF4; }
+
+    /* ── 이메일 확인 안내 화면 ── */
+    .auth-confirm-screen {
+      display: none;
+      text-align: center;
+      padding: 48px 36px;
+    }
+    .auth-confirm-screen.show { display: block; }
+    .confirm-emoji { font-size: 56px; margin-bottom: 16px; }
+    .confirm-title { font-size: 20px; font-weight: 900; color: var(--text-dark); margin-bottom: 10px; }
+    .confirm-desc { font-size: 14px; color: var(--text-muted); line-height: 1.7; }
+    .confirm-email-box {
+      display: inline-block;
+      background: var(--bg-soft);
+      border-radius: var(--radius-md);
+      padding: 10px 20px;
+      font-weight: 700;
+      color: var(--primary-dark);
+      font-size: 15px;
+      margin: 16px 0;
+    }
+
+    /* ── 비밀번호 재설정 패널 ── */
+    #resetPanel {
+      display: none;
+      padding: 36px;
+      text-align: center;
+    }
+    #resetPanel.show { display: block; }
+
+    /* ── 구분선 ── */
+    .auth-divider {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      color: var(--text-light);
+      font-size: 12px;
+      margin: 4px 0;
+    }
+    .auth-divider::before, .auth-divider::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border-light);
+    }
+
+    /* ── 약관 동의 ── */
+    .terms-check {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      font-size: 13px;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+    .terms-check input {
+      width: 16px;
+      height: 16px;
+      margin-top: 2px;
+      flex-shrink: 0;
+      accent-color: var(--primary);
+      cursor: pointer;
+    }
+    .terms-check a {
+      color: var(--primary-dark);
+      font-weight: 600;
+      text-decoration: none;
+    }
+    .terms-check a:hover { text-decoration: underline; }
+
+    /* ── 반응형 ── */
+    @media (max-width: 520px) {
+      .auth-panel { padding: 28px 22px 24px; }
+      .auth-panel-title { font-size: 19px; }
+      #resetPanel { padding: 28px 22px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ── 헤더 ── -->
+<header class="site-header" id="siteHeader">
+  <div class="header-inner">
+    <a href="index.html" class="logo">
+      <span class="logo-icon">📦</span>
+      <div class="logo-text">
+        <span class="logo-main">그림책 질문박스</span>
+        <span class="logo-sub">창의논술 수업을 위한 질문 아카이브</span>
+      </div>
+    </a>
+    <nav class="main-nav">
+      <a href="index.html#today-question" class="nav-link">오늘의 질문</a>
+      <a href="index.html#books-section" class="nav-link">도서 목록</a>
+      <a href="index.html#about" class="nav-link">그림책 질문박스란?</a>
+    </nav>
+    <div class="h-auth-wrap">
+      <a href="auth.html" class="h-btn-login" id="headerLoginBtn"><i class="fas fa-sign-in-alt"></i> 로그인</a>
+      <a href="auth.html?tab=signup" class="h-btn-signup" id="headerSignupBtn"><i class="fas fa-user-plus"></i> 가입</a>
+      <div class="h-user-menu" id="headerUserMenu">
+        <div style="position:relative">
+          <button class="h-user-btn" id="headerUserMenuBtn">
+            <div class="h-user-avatar" id="headerUserAvatar">?</div>
+            <span class="h-user-name" id="headerUserName">선생님</span>
+            <i class="fas fa-chevron-down" style="font-size:10px;color:var(--text-light)"></i>
+          </button>
+          <div class="h-dropdown" id="headerUserDropdown">
+            <a href="auth.html"><i class="fas fa-user-circle"></i> 내 프로필</a>
+            <a href="admin.html" class="h-admin-only" style="display:none"><i class="fas fa-cog"></i> 관리자 페이지</a>
+            <div class="h-drop-divider"></div>
+            <button id="headerLogoutBtn" class="h-drop-logout"><i class="fas fa-sign-out-alt"></i> 로그아웃</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <button class="hamburger" id="hamburger" aria-label="메뉴 열기">
+      <i class="fas fa-bars"></i>
+    </button>
+  </div>
+  <nav class="mobile-nav" id="mobileNav">
+    <a href="index.html#today-question" class="nav-link">💡 오늘의 질문</a>
+    <a href="index.html#books-section" class="nav-link">📚 도서 목록</a>
+    <a href="index.html#about" class="nav-link">📦 그림책 질문박스란?</a>
+    <a href="admin.html" class="nav-link h-admin-only" style="display:none">⚙️ 관리자</a>
+    <a href="auth.html" class="nav-link active" id="mobileAuthLink">🔑 로그인 / 가입</a>
+  </nav>
+</header>
+
+<!-- ── 메인 ── -->
+<main class="auth-page">
+  <div class="auth-wrap">
+
+    <!-- 로고 -->
+    <div class="auth-logo">
+      <a href="index.html">
+        <div class="auth-logo-icon">📦</div>
+        <div class="auth-logo-name">그림책 질문박스</div>
+        <div class="auth-logo-sub">초등 창의논술 강사를 위한 공간</div>
+      </a>
+    </div>
+
+    <!-- ── 카드 (탭 + 패널) ── -->
+    <div class="auth-card" id="authCard">
+
+      <!-- 탭 -->
+      <div class="auth-tabs">
+        <button class="auth-tab active" id="tabLogin" onclick="switchTab('login')">
+          <i class="fas fa-sign-in-alt"></i> 로그인
+        </button>
+        <button class="auth-tab" id="tabSignup" onclick="switchTab('signup')">
+          <i class="fas fa-user-plus"></i> 회원가입
+        </button>
+      </div>
+
+      <!-- ═══ 로그인 패널 ═══ -->
+      <div class="auth-panel active" id="panelLogin">
+        <h1 class="auth-panel-title">다시 만나서 반가워요 👋</h1>
+        <p class="auth-panel-desc">이메일과 비밀번호로 로그인하세요.</p>
+
+        <div class="auth-alert" id="loginAlert"></div>
+
+        <form class="auth-form" id="loginForm" onsubmit="handleLogin(event)">
+          <div class="form-field">
+            <label>이메일 <span class="req">*</span></label>
+            <div class="input-wrap">
+              <i class="fas fa-envelope"></i>
+              <input type="email" id="loginEmail" placeholder="teacher@school.com" required autocomplete="email" />
+            </div>
+          </div>
+
+          <div class="form-field">
+            <label>비밀번호 <span class="req">*</span></label>
+            <div class="input-wrap">
+              <i class="fas fa-lock"></i>
+              <input type="password" id="loginPassword" placeholder="비밀번호 입력" required autocomplete="current-password" />
+              <button type="button" class="toggle-pw" onclick="togglePw('loginPassword', this)">
+                <i class="fas fa-eye"></i>
+              </button>
+            </div>
+          </div>
+
+          <button type="submit" class="auth-submit" id="loginBtn">
+            <div class="spinner"></div>
+            <span class="btn-text"><i class="fas fa-sign-in-alt"></i> 로그인</span>
+          </button>
+        </form>
+
+        <div class="auth-footer-link" style="margin-top:14px;">
+          <button onclick="showReset()">비밀번호를 잊으셨나요?</button>
+        </div>
+        <div class="auth-divider" style="margin-top:20px;">또는</div>
+        <div class="auth-footer-link">
+          아직 계정이 없으신가요?
+          <button onclick="switchTab('signup')">회원가입 →</button>
+        </div>
+      </div>
+
+      <!-- ═══ 회원가입 패널 ═══ -->
+      <div class="auth-panel" id="panelSignup">
+        <h1 class="auth-panel-title">함께해요! 🌱</h1>
+        <p class="auth-panel-desc">선생님만을 위한 그림책 질문 아카이브.<br>지금 바로 가입하세요.</p>
+
+        <div class="auth-alert" id="signupAlert"></div>
+
+        <form class="auth-form" id="signupForm" onsubmit="handleSignup(event)">
+
+          <div class="form-field">
+            <label>닉네임 <span class="req">*</span></label>
+            <div class="input-wrap">
+              <i class="fas fa-user"></i>
+              <input type="text" id="signupNickname" placeholder="예: 햇살 선생님" required maxlength="20" />
+            </div>
+            <span class="field-hint">수업 현장에서 불리는 이름이나 별명을 사용하세요 (최대 20자)</span>
+          </div>
+
+          <div class="form-field">
+            <label>이메일 <span class="req">*</span></label>
+            <div class="input-wrap">
+              <i class="fas fa-envelope"></i>
+              <input type="email" id="signupEmail" placeholder="teacher@school.com" required autocomplete="email" />
+            </div>
+          </div>
+
+          <div class="form-field">
+            <label>소속 학교 / 기관 <span style="font-weight:400;color:var(--text-light)">(선택)</span></label>
+            <div class="input-wrap">
+              <i class="fas fa-school"></i>
+              <input type="text" id="signupSchool" placeholder="예: 햇빛초등학교" maxlength="50" />
+            </div>
+          </div>
+
+          <div class="form-field">
+            <label>비밀번호 <span class="req">*</span></label>
+            <div class="input-wrap">
+              <i class="fas fa-lock"></i>
+              <input type="password" id="signupPassword" placeholder="8자 이상 입력" required autocomplete="new-password"
+                     oninput="checkPwStrength(this.value)" />
+              <button type="button" class="toggle-pw" onclick="togglePw('signupPassword', this)">
+                <i class="fas fa-eye"></i>
+              </button>
+            </div>
+            <div class="pw-strength"><div class="pw-strength-bar" id="pwBar"></div></div>
+            <span class="pw-strength-label" id="pwLabel" style="color:var(--text-light)"></span>
+          </div>
+
+          <div class="form-field">
+            <label>비밀번호 확인 <span class="req">*</span></label>
+            <div class="input-wrap">
+              <i class="fas fa-lock"></i>
+              <input type="password" id="signupPasswordConfirm" placeholder="비밀번호 재입력" required autocomplete="new-password" />
+              <button type="button" class="toggle-pw" onclick="togglePw('signupPasswordConfirm', this)">
+                <i class="fas fa-eye"></i>
+              </button>
+            </div>
+            <span class="field-error" id="pwMatchError">비밀번호가 일치하지 않습니다.</span>
+          </div>
+
+          <label class="terms-check">
+            <input type="checkbox" id="termsCheck" required />
+            <span>
+              <a href="#" onclick="return false;">이용약관</a> 및
+              <a href="#" onclick="return false;">개인정보 처리방침</a>에 동의합니다. <span class="req">*</span>
+            </span>
+          </label>
+
+          <button type="submit" class="auth-submit" id="signupBtn">
+            <div class="spinner"></div>
+            <span class="btn-text"><i class="fas fa-user-plus"></i> 가입하기</span>
+          </button>
+        </form>
+
+        <div class="auth-divider" style="margin-top:20px;">또는</div>
+        <div class="auth-footer-link">
+          이미 계정이 있으신가요?
+          <button onclick="switchTab('login')">로그인 →</button>
+        </div>
+      </div>
+
+      <!-- ═══ 비밀번호 재설정 패널 ═══ -->
+      <div id="resetPanel">
+        <div style="font-size:40px;margin-bottom:12px;">🔑</div>
+        <h2 style="font-size:19px;font-weight:900;color:var(--text-dark);margin-bottom:8px;">비밀번호 재설정</h2>
+        <p style="font-size:13px;color:var(--text-muted);margin-bottom:24px;line-height:1.6;">
+          가입한 이메일을 입력하면<br>재설정 링크를 보내드립니다.
+        </p>
+        <div class="auth-alert" id="resetAlert"></div>
+        <form onsubmit="handleReset(event)" style="display:flex;flex-direction:column;gap:14px;">
+          <div class="input-wrap">
+            <i class="fas fa-envelope"></i>
+            <input type="email" id="resetEmail" placeholder="가입한 이메일 입력" required />
+          </div>
+          <button type="submit" class="auth-submit" id="resetBtn">
+            <div class="spinner"></div>
+            <span class="btn-text"><i class="fas fa-paper-plane"></i> 재설정 링크 보내기</span>
+          </button>
+        </form>
+        <div class="auth-footer-link" style="margin-top:16px;">
+          <button onclick="hideReset()">← 로그인으로 돌아가기</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── 이메일 확인 안내 화면 ── -->
+    <div class="auth-confirm-screen" id="confirmScreen">
+      <div class="confirm-emoji">📬</div>
+      <h2 class="confirm-title">이메일을 확인해주세요!</h2>
+      <p class="confirm-desc">아래 이메일로 인증 링크를 보냈습니다.<br>링크를 클릭하면 가입이 완료됩니다.</p>
+      <div class="confirm-email-box" id="confirmEmail"></div>
+      <p class="confirm-desc" style="font-size:12px;margin-top:8px;">
+        메일이 안 보이면 <strong>스팸함</strong>을 확인해보세요.<br>
+        인증 링크는 <strong>24시간</strong> 유효합니다.
+      </p>
+      <div style="margin-top:28px;">
+        <a href="index.html" class="btn btn-primary">
+          <i class="fas fa-home"></i> 홈으로 이동
+        </a>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<script>
+/* ══════════════════════════════════════
+   탭 전환
+══════════════════════════════════════ */
+function switchTab(tab) {
+  document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.auth-panel').forEach(p => p.classList.remove('active'));
+  hideReset();
+
+  document.getElementById(`tab${tab.charAt(0).toUpperCase() + tab.slice(1)}`).classList.add('active');
+  document.getElementById(`panel${tab.charAt(0).toUpperCase() + tab.slice(1)}`).classList.add('active');
+}
+
+/* ══════════════════════════════════════
+   비밀번호 보기/숨기기
+══════════════════════════════════════ */
+function togglePw(inputId, btn) {
+  const inp = document.getElementById(inputId);
+  const icon = btn.querySelector('i');
+  if (inp.type === 'password') {
+    inp.type = 'text';
+    icon.className = 'fas fa-eye-slash';
+  } else {
+    inp.type = 'password';
+    icon.className = 'fas fa-eye';
+  }
+}
+
+/* ══════════════════════════════════════
+   비밀번호 강도 체크
+══════════════════════════════════════ */
+function checkPwStrength(pw) {
+  const bar   = document.getElementById('pwBar');
+  const label = document.getElementById('pwLabel');
+  let score = 0;
+  if (pw.length >= 8)                     score++;
+  if (/[A-Za-z]/.test(pw))               score++;
+  if (/[0-9]/.test(pw))                   score++;
+  if (/[^A-Za-z0-9]/.test(pw))            score++;
+
+  const levels = [
+    { color: '#FC8181', text: '매우 약함', pct: '20%' },
+    { color: '#F6AD55', text: '약함',     pct: '40%' },
+    { color: '#F6E05E', text: '보통',     pct: '65%' },
+    { color: '#68D391', text: '강함',     pct: '85%' },
+    { color: '#48BB78', text: '매우 강함', pct: '100%' },
+  ];
+  const lv = levels[Math.max(0, score - 1)] || levels[0];
+  if (!pw) { bar.style.width = '0'; label.textContent = ''; return; }
+  bar.style.width = lv.pct;
+  bar.style.background = lv.color;
+  label.textContent = lv.text;
+  label.style.color = lv.color;
+}
+
+/* ══════════════════════════════════════
+   알림 표시
+══════════════════════════════════════ */
+function showAlert(elId, type, msg) {
+  const el = document.getElementById(elId);
+  if (!el) return;
+  el.className = `auth-alert ${type} show`;
+  el.innerHTML = `<i class="fas fa-${type === 'success' ? 'check-circle' : type === 'info' ? 'info-circle' : 'exclamation-circle'}"></i> ${msg}`;
+}
+function hideAlert(elId) {
+  const el = document.getElementById(elId);
+  if (el) el.classList.remove('show');
+}
+
+/* ══════════════════════════════════════
+   로그인 처리
+══════════════════════════════════════ */
+async function handleLogin(e) {
+  e.preventDefault();
+  hideAlert('loginAlert');
+  const btn = document.getElementById('loginBtn');
+  const email    = document.getElementById('loginEmail').value.trim();
+  const password = document.getElementById('loginPassword').value;
+
+  btn.classList.add('loading');
+  btn.disabled = true;
+
+  try {
+    await Auth.signIn({ email, password });
+    showAlert('loginAlert', 'success', '로그인 성공! 잠시 후 이동합니다...');
+
+    // 원래 가려던 페이지로 이동 (또는 홈)
+    const redirect = new URLSearchParams(location.search).get('redirect') || 'index.html';
+    setTimeout(() => { window.location.href = redirect; }, 900);
+  } catch (err) {
+    showAlert('loginAlert', 'error', err.message);
+    btn.classList.remove('loading');
+    btn.disabled = false;
+  }
+}
+
+/* ══════════════════════════════════════
+   회원가입 처리
+══════════════════════════════════════ */
+async function handleSignup(e) {
+  e.preventDefault();
+  hideAlert('signupAlert');
+
+  const nickname = document.getElementById('signupNickname').value.trim();
+  const email    = document.getElementById('signupEmail').value.trim();
+  const school   = document.getElementById('signupSchool').value.trim();
+  const pw       = document.getElementById('signupPassword').value;
+  const pwConfirm = document.getElementById('signupPasswordConfirm').value;
+  const pwError  = document.getElementById('pwMatchError');
+
+  // 비밀번호 확인
+  if (pw !== pwConfirm) {
+    pwError.classList.add('show');
+    document.getElementById('signupPasswordConfirm').classList.add('error');
+    return;
+  }
+  pwError.classList.remove('show');
+  document.getElementById('signupPasswordConfirm').classList.remove('error');
+
+  if (pw.length < 8) {
+    showAlert('signupAlert', 'error', '비밀번호는 8자 이상이어야 합니다.');
+    return;
+  }
+
+  const btn = document.getElementById('signupBtn');
+  btn.classList.add('loading');
+  btn.disabled = true;
+
+  try {
+    const result = await Auth.signUp({ email, password: pw, nickname, school });
+
+    if (result.needsConfirm) {
+      // 이메일 인증 필요
+      document.getElementById('authCard').style.display = 'none';
+      const confirmScreen = document.getElementById('confirmScreen');
+      confirmScreen.classList.add('show');
+      document.getElementById('confirmEmail').textContent = email;
+    } else {
+      // 바로 로그인 완료
+      showAlert('signupAlert', 'success', `환영합니다, ${nickname} 선생님! 🎉`);
+      setTimeout(() => { window.location.href = 'index.html'; }, 1200);
+    }
+  } catch (err) {
+    showAlert('signupAlert', 'error', err.message);
+    btn.classList.remove('loading');
+    btn.disabled = false;
+  }
+}
+
+/* ══════════════════════════════════════
+   비밀번호 재설정
+══════════════════════════════════════ */
+function showReset() {
+  document.querySelectorAll('.auth-panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('resetPanel').classList.add('show');
+}
+function hideReset() {
+  document.getElementById('resetPanel').classList.remove('show');
+}
+
+async function handleReset(e) {
+  e.preventDefault();
+  hideAlert('resetAlert');
+  const email = document.getElementById('resetEmail').value.trim();
+  const btn   = document.getElementById('resetBtn');
+  btn.classList.add('loading'); btn.disabled = true;
+
+  try {
+    await Auth.resetPassword(email);
+    showAlert('resetAlert', 'success', '재설정 링크를 이메일로 발송했습니다. 메일함을 확인해주세요!');
+  } catch (err) {
+    showAlert('resetAlert', 'error', err.message);
+  } finally {
+    btn.classList.remove('loading'); btn.disabled = false;
+  }
+}
+
+/* ══════════════════════════════════════
+   이미 로그인 상태이면 홈으로
+══════════════════════════════════════ */
+document.addEventListener('DOMContentLoaded', async () => {
+  await Auth.init();
+  if (Auth.isLoggedIn()) {
+    const redirect = new URLSearchParams(location.search).get('redirect') || 'index.html';
+    window.location.href = redirect;
+  }
+
+  // URL에 tab=signup 파라미터가 있으면 회원가입 탭 활성화
+  if (new URLSearchParams(location.search).get('tab') === 'signup') {
+    switchTab('signup');
+  }
+});
+</script>
+</body>
+</html>

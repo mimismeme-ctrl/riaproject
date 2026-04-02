@@ -8,11 +8,70 @@
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" />
   <link rel="stylesheet" href="css/style.css" />
+  <script src="js/supabase.js"></script>
+  <script src="js/auth.js" defer></script>
+  <style>
+    /* ── 댓글 섹션 ── */
+    .comments-section { background:#fff; border-top:1px solid var(--border-light); padding:48px 0; }
+    .comments-section .section-title-sm { margin-bottom:28px; }
+    .comments-loading { text-align:center; padding:32px; color:var(--text-muted); font-size:14px; }
+    .comment-form { display:flex; gap:14px; margin-bottom:8px; }
+    .comment-form-avatar { width:40px; height:40px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:16px; font-weight:700; color:#fff; flex-shrink:0; margin-top:2px; }
+    .comment-form-body { flex:1; }
+    .comment-type-row { display:flex; align-items:center; gap:8px; margin-bottom:10px; flex-wrap:wrap; }
+    .comment-type-label { font-size:12px; font-weight:700; color:var(--text-muted); }
+    .comment-type-select { padding:5px 10px; border:1.5px solid var(--border); border-radius:var(--radius-sm); font-size:13px; font-family:var(--font); background:#fff; cursor:pointer; }
+    .comment-type-select:focus { outline:none; border-color:var(--primary); }
+    .star-picker { display:flex; gap:2px; }
+    .star-pick { font-size:20px; cursor:pointer; color:#E2E8F0; transition:color .15s; }
+    .star-pick:hover, .star-pick.active { color:#F6AD55; }
+    .comment-textarea { width:100%; padding:12px 14px; border:1.5px solid var(--border); border-radius:var(--radius-md); font-size:14px; font-family:var(--font); resize:vertical; line-height:1.6; transition:border-color var(--transition); box-sizing:border-box; }
+    .comment-textarea:focus { outline:none; border-color:var(--primary); box-shadow:0 0 0 3px rgba(108,158,232,.1); }
+    .comment-form-actions { display:flex; justify-content:space-between; align-items:center; margin-top:8px; }
+    .char-count { font-size:12px; color:var(--text-light); }
+    .btn-sm { padding:8px 16px; font-size:13px; }
+    .comment-login-prompt { text-align:center; padding:28px; background:var(--bg-soft); border-radius:var(--radius-lg); border:1.5px dashed var(--border); margin-bottom:8px; color:var(--text-muted); font-size:14px; }
+    .comments-header-row { display:flex; align-items:center; justify-content:space-between; padding:16px 0 12px; border-bottom:1px solid var(--border-light); margin-bottom:16px; }
+    .comments-count { font-size:14px; color:var(--text-muted); display:flex; align-items:center; gap:6px; }
+    .comments-count strong { color:var(--text-dark); font-weight:700; }
+    .comments-empty { text-align:center; padding:40px 24px; color:var(--text-muted); font-size:14px; }
+    .comment-card { padding:18px 0; border-bottom:1px solid var(--border-light); }
+    .comment-card:last-child { border-bottom:none; }
+    .comment-header { display:flex; align-items:flex-start; gap:10px; margin-bottom:10px; }
+    .comment-avatar { width:36px; height:36px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:14px; font-weight:700; color:#fff; flex-shrink:0; }
+    .comment-meta { flex:1; display:flex; flex-wrap:wrap; align-items:center; gap:6px; }
+    .comment-nick { font-size:14px; font-weight:700; color:var(--text-dark); }
+    .comment-stars { font-size:14px; }
+    .comment-date { font-size:12px; color:var(--text-light); }
+    .comment-del-btn { background:none; border:none; color:var(--text-light); cursor:pointer; font-size:12px; padding:4px 6px; border-radius:6px; transition:all var(--transition); margin-left:auto; }
+    .comment-del-btn:hover { background:#FFF0F0; color:#E53E3E; }
+    .comment-content { font-size:14px; color:var(--text-body); line-height:1.7; padding-left:46px; margin-bottom:8px; }
+    .comment-footer { padding-left:46px; }
+    .comment-like-btn { display:inline-flex; align-items:center; gap:5px; background:none; border:1px solid var(--border-light); border-radius:20px; padding:4px 12px; font-size:12px; color:var(--text-muted); cursor:pointer; transition:all var(--transition); }
+    .comment-like-btn:hover { border-color:#FC8181; color:#E53E3E; background:#FFF5F5; }
+    .comment-like-btn.liked { border-color:#FC8181; color:#E53E3E; background:#FFF5F5; }
+    .comment-like-btn .fas { font-size:11px; }
+    /* 헤더 유저 메뉴 */
+    .header-user-menu { display:none; align-items:center; gap:8px; position:relative; }
+    .header-user-btn { display:flex; align-items:center; gap:8px; background:none; border:1.5px solid var(--border); border-radius:var(--radius-md); padding:6px 12px; cursor:pointer; font-family:var(--font); font-size:14px; font-weight:600; color:var(--text-dark); transition:all var(--transition); }
+    .header-user-btn:hover { border-color:var(--primary); background:var(--bg-soft); }
+    .header-avatar { width:28px; height:28px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:700; color:#fff; background:var(--primary); flex-shrink:0; }
+    .user-dropdown { position:absolute; top:calc(100% + 8px); right:0; background:#fff; border:1px solid var(--border-light); border-radius:var(--radius-lg); box-shadow:var(--shadow-lg); min-width:180px; z-index:200; display:none; overflow:hidden; }
+    .user-dropdown.open { display:block; animation:fadeIn .15s ease; }
+    .user-dropdown a, .user-dropdown button { display:flex; align-items:center; gap:10px; padding:11px 16px; font-size:13px; font-weight:500; color:var(--text-body); text-decoration:none; background:none; border:none; width:100%; cursor:pointer; font-family:var(--font); transition:background var(--transition); }
+    .user-dropdown a:hover, .user-dropdown button:hover { background:var(--bg-soft); }
+    .user-dropdown .divider { height:1px; background:var(--border-light); margin:4px 0; }
+    .nav-auth-btns { display:flex; gap:8px; }
+    .btn-login { padding:7px 14px; font-size:13px; font-weight:700; border:1.5px solid var(--border); border-radius:var(--radius-md); background:#fff; color:var(--text-dark); cursor:pointer; transition:all var(--transition); text-decoration:none; display:inline-flex; align-items:center; gap:6px; }
+    .btn-login:hover { border-color:var(--primary); color:var(--primary); }
+    .btn-signup { padding:7px 14px; font-size:13px; font-weight:700; border:none; border-radius:var(--radius-md); background:var(--primary); color:#fff; cursor:pointer; transition:all var(--transition); text-decoration:none; display:inline-flex; align-items:center; gap:6px; }
+    .btn-signup:hover { background:var(--primary-dark); }
+  </style>
 </head>
 <body>
 
 <!-- ========== 헤더 ========== -->
-<header class="site-header">
+<header class="site-header" id="siteHeader">
   <div class="header-inner">
     <a href="index.html" class="logo">
       <span class="logo-icon">📦</span>
@@ -23,23 +82,39 @@
     </a>
     <nav class="main-nav">
       <a href="index.html" class="nav-link">홈</a>
-      <a href="index.html#books-section" class="nav-link">도서 목록</a>
+      <a href="index.html#books-section" class="nav-link active">도서 목록</a>
       <a href="index.html#today-question" class="nav-link">오늘의 질문</a>
       <a href="index.html#about" class="nav-link">소개</a>
-      <a href="admin.html" class="nav-link nav-admin">
-        <i class="fas fa-cog"></i> 관리
-      </a>
     </nav>
+    <div class="h-auth-wrap">
+      <a href="auth.html" class="h-btn-login" id="headerLoginBtn"><i class="fas fa-sign-in-alt"></i> 로그인</a>
+      <a href="auth.html?tab=signup" class="h-btn-signup" id="headerSignupBtn"><i class="fas fa-user-plus"></i> 가입</a>
+      <div class="h-user-menu" id="headerUserMenu">
+        <div style="position:relative">
+          <button class="h-user-btn" id="headerUserMenuBtn">
+            <div class="h-user-avatar" id="headerUserAvatar">?</div>
+            <span class="h-user-name" id="headerUserName">선생님</span>
+            <i class="fas fa-chevron-down" style="font-size:10px;color:var(--text-light)"></i>
+          </button>
+          <div class="h-dropdown" id="headerUserDropdown">
+            <a href="auth.html"><i class="fas fa-user-circle"></i> 내 프로필</a>
+            <a href="admin.html" class="h-admin-only" style="display:none"><i class="fas fa-cog"></i> 관리자 페이지</a>
+            <div class="h-drop-divider"></div>
+            <button id="headerLogoutBtn" class="h-drop-logout"><i class="fas fa-sign-out-alt"></i> 로그아웃</button>
+          </div>
+        </div>
+      </div>
+    </div>
     <button class="hamburger" id="hamburger" aria-label="메뉴 열기">
       <i class="fas fa-bars"></i>
     </button>
   </div>
   <nav class="mobile-nav" id="mobileNav">
-    <a href="index.html" class="nav-link">홈</a>
-    <a href="index.html#books-section" class="nav-link">도서 목록</a>
-    <a href="index.html#today-question" class="nav-link">오늘의 질문</a>
-    <a href="index.html#about" class="nav-link">소개</a>
-    <a href="admin.html" class="nav-link">⚙️ 관리자</a>
+    <a href="index.html#today-question" class="nav-link">💡 오늘의 질문</a>
+    <a href="index.html#books-section" class="nav-link active">📚 도서 목록</a>
+    <a href="index.html#about" class="nav-link">📦 그림책 질문박스란?</a>
+    <a href="admin.html" class="nav-link h-admin-only" style="display:none">⚙️ 관리자</a>
+    <a href="auth.html" class="nav-link" id="mobileAuthLink">🔑 로그인 / 가입</a>
   </nav>
 </header>
 
@@ -218,21 +293,15 @@
   </div>
 </div>
 
-<!-- ========== 답변 추가 예정 영역 ========== -->
-<div class="answer-add-section">
+<!-- ========== 의견 / 댓글 섹션 ========== -->
+<section class="comments-section" id="commentsSection">
   <div class="container">
-    <div class="coming-soon-box answer-add-placeholder">
-      <div class="coming-soon-icon">✏️</div>
-      <div class="coming-soon-content">
-        <h3>답변 추가 기능 — 업데이트 예정</h3>
-        <p>아이들의 다양한 답변을 직접 입력하고 관리하는 기능이 곧 추가됩니다.<br />현재는 기존에 수집된 답변 데이터를 열람하실 수 있습니다.</p>
-        <button class="btn btn-outline btn-sm" disabled>
-          <i class="fas fa-plus"></i> 답변 추가하기 (준비 중)
-        </button>
-      </div>
+    <h2 class="section-title-sm">💬 선생님들의 의견</h2>
+    <div id="commentsRoot">
+      <div class="comments-loading"><i class="fas fa-spinner fa-spin"></i> 불러오는 중...</div>
     </div>
   </div>
-</div>
+</section>
 
 <!-- ========== 관련 도서 ========== -->
 <section class="related-books-section">
@@ -268,7 +337,16 @@
   <i class="fas fa-chevron-up"></i>
 </button>
 
-<script src="js/data.js"></script>
+<script src="js/supabase.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/comments.js"></script>
 <script src="js/book.js"></script>
+<script>
+  // 댓글 섹션 마운트 (book.js가 bookId를 세팅한 뒤 호출)
+  document.addEventListener('bookLoaded', (e) => {
+    const bookId = e.detail?.bookId;
+    if (bookId) Comments.mount('commentsRoot', bookId);
+  });
+</script>
 </body>
 </html>

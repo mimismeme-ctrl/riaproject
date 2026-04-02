@@ -9,6 +9,8 @@
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" />
   <link rel="stylesheet" href="css/style.css" />
+  <script src="js/supabase.js"></script>
+  <script src="js/auth.js" defer></script>
 </head>
 <body>
 
@@ -23,30 +25,50 @@
       </div>
     </a>
     <nav class="main-nav">
-      <a href="index.html" class="nav-link active">홈</a>
-      <a href="#books-section" class="nav-link">도서 목록</a>
       <a href="#today-question" class="nav-link">오늘의 질문</a>
-      <a href="#about" class="nav-link">소개</a>
-      <a href="admin.html" class="nav-link nav-admin">
-        <i class="fas fa-cog"></i> 관리
-      </a>
+      <a href="#books-section" class="nav-link">도서 목록</a>
+      <a href="#about" class="nav-link">그림책 질문박스란?</a>
     </nav>
+    <div class="h-auth-wrap">
+      <a href="auth.html" class="h-btn-login"><i class="fas fa-sign-in-alt"></i> 로그인</a>
+      <a href="auth.html?tab=signup" class="h-btn-signup"><i class="fas fa-user-plus"></i> 가입</a>
+      <div class="h-user-menu" id="headerUserMenu">
+        <div style="position:relative">
+          <button class="h-user-btn" id="headerUserMenuBtn">
+            <div class="h-user-avatar">?</div>
+            <span class="h-user-name">선생님</span>
+            <i class="fas fa-chevron-down" style="font-size:10px;color:var(--text-light)"></i>
+          </button>
+          <div class="h-dropdown" id="headerUserDropdown">
+            <a href="auth.html"><i class="fas fa-user-circle"></i> 내 프로필</a>
+            <a href="admin.html" class="h-admin-only" style="display:none"><i class="fas fa-cog"></i> 관리자 페이지</a>
+            <div class="h-drop-divider"></div>
+            <button id="headerLogoutBtn" class="h-drop-logout"><i class="fas fa-sign-out-alt"></i> 로그아웃</button>
+          </div>
+        </div>
+      </div>
+    </div>
     <button class="hamburger" id="hamburger" aria-label="메뉴 열기">
       <i class="fas fa-bars"></i>
     </button>
   </div>
-  <!-- 모바일 메뉴 -->
   <nav class="mobile-nav" id="mobileNav">
-    <a href="index.html" class="nav-link active">홈</a>
-    <a href="#books-section" class="nav-link">도서 목록</a>
-    <a href="#today-question" class="nav-link">오늘의 질문</a>
-    <a href="#about" class="nav-link">소개</a>
-    <a href="admin.html" class="nav-link">⚙️ 관리자</a>
+    <a href="#today-question" class="nav-link">💡 오늘의 질문</a>
+    <a href="#books-section" class="nav-link">📚 도서 목록</a>
+    <a href="#about" class="nav-link">📦 그림책 질문박스란?</a>
+    <a href="admin.html" class="nav-link h-admin-only" style="display:none">⚙️ 관리자</a>
+    <a href="auth.html" class="nav-link" id="mobileAuthLink">🔑 로그인 / 가입</a>
   </nav>
 </header>
 
 <!-- ========== 히어로 배너 ========== -->
+<div class="hero-bg">
 <section class="hero">
+  <!-- 배경 장식 도형 -->
+  <div class="hero-deco hero-deco-1"></div>
+  <div class="hero-deco hero-deco-2"></div>
+  <div class="hero-deco hero-deco-3"></div>
+
   <div class="hero-content">
     <div class="hero-badge"><i class="fas fa-star"></i> 초등 창의논술 전문 플랫폼</div>
     <h1 class="hero-title">
@@ -54,14 +76,14 @@
       <span class="highlight">생각을 열어요</span>
     </h1>
     <p class="hero-desc">
-      300권의 그림책에서 엄선한 창의 질문과 아이들의 대답을 모았습니다.<br />
+      300권의 그림책에서 엄선한 창의 질문과<br class="hero-br"/> 아이들의 대답을 모았습니다.<br />
       주제별·키워드별 검색으로 딱 맞는 수업 자료를 찾아보세요.
     </p>
     <div class="hero-actions">
-      <a href="#books-section" class="btn btn-primary">
+      <a href="#books-section" class="btn btn-primary btn-hero">
         <i class="fas fa-search"></i> 도서 탐색하기
       </a>
-      <a href="#today-question" class="btn btn-outline">
+      <a href="#today-question" class="btn btn-outline btn-hero">
         <i class="fas fa-lightbulb"></i> 오늘의 질문 보기
       </a>
     </div>
@@ -72,7 +94,7 @@
       </div>
       <div class="stat-divider">|</div>
       <div class="stat-item">
-        <span class="stat-num">12+</span>
+        <span class="stat-num">15+</span>
         <span class="stat-label">주제 분류</span>
       </div>
       <div class="stat-divider">|</div>
@@ -82,39 +104,57 @@
       </div>
     </div>
   </div>
+
   <div class="hero-visual">
-    <div class="floating-cards">
-      <div class="float-card fc1">📚</div>
-      <div class="float-card fc2">💡</div>
-      <div class="float-card fc3">🌱</div>
-      <div class="float-card fc4">🎨</div>
-      <div class="float-card fc5">❓</div>
+    <!-- 중앙 책 아이콘 -->
+    <div class="hero-book-orb">
+      <div class="hero-orb-ring"></div>
+      <div class="hero-orb-ring hero-orb-ring-2"></div>
+      <div class="hero-orb-ring hero-orb-ring-3"></div>
+      <div class="hero-orb-core">📦</div>
     </div>
+    <!-- 주변 떠다니는 카드 -->
+    <div class="float-card fc1">📚</div>
+    <div class="float-card fc2">💡</div>
+    <div class="float-card fc3">🌱</div>
+    <div class="float-card fc4">🎨</div>
+    <div class="float-card fc5">❓</div>
+    <div class="float-card fc6">🤔</div>
   </div>
 </section>
+</div><!-- /.hero-bg -->
 
-<!-- ========== 오늘의 창의 질문 ========== -->
+<!-- ========== 오늘의 창의 질문 롤링 ========== -->
 <section class="today-question-section" id="today-question">
-  <div class="container">
-    <div class="section-label">
-      <i class="fas fa-lightbulb"></i> 오늘의 창의 질문
+  <div class="tq-bg-deco"></div>
+  <div class="container" style="position:relative;">
+
+    <div class="tq-header">
+      <div class="tq-label-pill"><i class="fas fa-lightbulb"></i> 오늘의 창의 질문</div>
+      <h2 class="tq-section-title">지금 이 질문, 수업에 써보세요</h2>
+      <p class="tq-desc">그림책 속 창의 질문을 무작위로 만나보세요. 클릭하면 책 상세 페이지로 이동해요.</p>
     </div>
-    <div class="today-card" id="todayCard">
-      <div class="today-card-inner">
-        <div class="today-book-emoji" id="todayEmoji">📚</div>
-        <div class="today-content">
-          <p class="today-book-title" id="todayBookTitle">로딩 중...</p>
-          <p class="today-question-text" id="todayQuestionText">질문을 불러오는 중입니다...</p>
-          <div class="today-actions">
-            <a href="#" class="btn btn-sm btn-primary" id="todayBookLink">
-              <i class="fas fa-book-open"></i> 책 자세히 보기
-            </a>
-            <button class="btn btn-sm btn-ghost" id="refreshQuestion" onclick="loadTodayQuestion()">
-              <i class="fas fa-shuffle"></i> 다른 질문 보기
-            </button>
-          </div>
-        </div>
+
+    <!-- 메인 롤링 카드 -->
+    <div class="tq-rolling-wrap">
+      <!-- 이전/다음 버튼 -->
+      <button class="tq-arrow tq-prev" id="tqPrev" aria-label="이전">
+        <i class="fas fa-chevron-left"></i>
+      </button>
+
+      <div class="tq-stage" id="tqStage">
+        <!-- JS가 카드 삽입 (현재 + 전후 카드 동시 렌더) -->
       </div>
+
+      <button class="tq-arrow tq-next" id="tqNext" aria-label="다음">
+        <i class="fas fa-chevron-right"></i>
+      </button>
+    </div>
+
+    <!-- 닷 + 카운터 -->
+    <div class="tq-footer-row">
+      <div class="tq-dots" id="tqDots"></div>
+      <span class="tq-counter" id="tqCounter">1 / 1</span>
     </div>
   </div>
 </section>
@@ -144,12 +184,21 @@
       </div>
     </div>
 
-    <!-- 주제별 필터 -->
+    <!-- 필터: 연령대 위, 주제 아래 -->
     <div class="filter-wrap">
       <div class="filter-group">
-        <span class="filter-label">📌 주제</span>
+        <span class="filter-label">🎂 연령대 &nbsp;<button class="filter-cur filter-cur-btn" id="ageCurLabel" onclick="resetFilter('age')">전체</button></span>
+        <div class="filter-chips" id="ageFilters">
+          <button class="chip" data-filter="유아(3-5세)" data-type="age">🐣 3-5세</button>
+          <button class="chip" data-filter="저학년(6-8세)" data-type="age">🌟 6-8세</button>
+          <button class="chip" data-filter="중학년(9-10세)" data-type="age">📖 9-10세</button>
+          <button class="chip" data-filter="고학년(11-13세)" data-type="age">🎓 11-13세</button>
+        </div>
+      </div>
+
+      <div class="filter-group">
+        <span class="filter-label">📌 주제 &nbsp;<button class="filter-cur filter-cur-btn" id="themeCurLabel" onclick="resetFilter('theme')">전체</button></span>
         <div class="filter-chips" id="themeFilters">
-          <button class="chip active" data-filter="all" data-type="theme">전체</button>
           <button class="chip" data-filter="용기" data-type="theme">💪 용기</button>
           <button class="chip" data-filter="우정" data-type="theme">🤝 우정</button>
           <button class="chip" data-filter="가족" data-type="theme">👨‍👩‍👧 가족</button>
@@ -164,17 +213,6 @@
           <button class="chip" data-filter="규칙" data-type="theme">📋 규칙</button>
           <button class="chip" data-filter="생명" data-type="theme">🌼 생명</button>
           <button class="chip" data-filter="협력" data-type="theme">🤲 협력</button>
-        </div>
-      </div>
-
-      <div class="filter-group">
-        <span class="filter-label">🎂 연령대</span>
-        <div class="filter-chips" id="ageFilters">
-          <button class="chip active" data-filter="all" data-type="age">전체</button>
-          <button class="chip" data-filter="유아(3-5세)" data-type="age">🐣 3-5세</button>
-          <button class="chip" data-filter="저학년(6-8세)" data-type="age">🌟 6-8세</button>
-          <button class="chip" data-filter="중학년(9-10세)" data-type="age">📖 9-10세</button>
-          <button class="chip" data-filter="고학년(11-13세)" data-type="age">🎓 11-13세</button>
         </div>
       </div>
 
@@ -226,34 +264,46 @@
   </div>
 </section>
 
-<!-- ========== 소개 섹션 ========== -->
+<!-- ========== 그림책 질문박스란? ========== -->
 <section class="about-section" id="about">
+  <div class="about-top-wave"></div>
   <div class="container">
-    <div class="section-header" style="text-align:center; margin-bottom:48px;">
-      <h2 class="section-title">그림책 질문박스란?</h2>
-      <p class="section-desc">초등 창의논술 강사를 위한 통합 수업 자료 플랫폼입니다.</p>
+    <div class="about-header">
+      <div class="about-label-pill">📦 그림책 질문박스란?</div>
+      <h2 class="about-title">그림책 한 권,<br/>질문 하나로 시작하는 수업</h2>
+      <p class="about-subtitle">아이들이 스스로 생각하고 말할 수 있도록,<br/>강사가 직접 만든 창의 질문을 만나보세요.</p>
     </div>
+
     <div class="about-grid">
-      <div class="about-card">
-        <div class="about-icon">🔍</div>
-        <h3>주제별 검색</h3>
-        <p>용기, 우정, 가족, 환경 등 12개 이상의 주제와 다양한 키워드로 원하는 그림책을 빠르게 찾을 수 있어요.</p>
+      <div class="about-card about-card-blue">
+        <div class="about-icon-wrap"><i class="fas fa-search"></i></div>
+        <h3>연령·주제별 검색</h3>
+        <p>3~13세 연령대와 용기·우정·가족 등 15개 주제로 수업에 딱 맞는 그림책을 빠르게 찾아요.</p>
       </div>
-      <div class="about-card">
-        <div class="about-icon">💡</div>
+      <div class="about-card about-card-yellow">
+        <div class="about-icon-wrap"><i class="fas fa-lightbulb"></i></div>
         <h3>창의 질문 3종 세트</h3>
-        <p>각 그림책마다 강사가 직접 개발한 창의적 질문 3개가 준비되어 있어요. 아이들의 사고력을 키워주는 깊은 질문들이에요.</p>
+        <p>강사가 직접 개발한 창의 질문 3개가 책마다 준비되어 있어요. 아이들의 사고를 여는 깊은 질문들이에요.</p>
       </div>
-      <div class="about-card">
-        <div class="about-icon">🗣️</div>
+      <div class="about-card about-card-green">
+        <div class="about-icon-wrap"><i class="fas fa-child"></i></div>
         <h3>아이들의 목소리</h3>
-        <p>실제 수업에서 나온 아이들의 질문과 다양한 답변을 아카이브했어요. 수업 준비의 생생한 참고 자료가 됩니다.</p>
+        <p>실제 수업에서 나온 아이들의 질문과 다양한 답변을 아카이브했어요. 생생한 수업 참고 자료예요.</p>
       </div>
-      <div class="about-card">
-        <div class="about-icon">📱</div>
+      <div class="about-card about-card-pink">
+        <div class="about-icon-wrap"><i class="fas fa-mobile-alt"></i></div>
         <h3>어디서든 열람</h3>
-        <p>모바일, 태블릿, PC 어디서든 최적화된 화면으로 수업 전날 빠르게 확인하세요.</p>
+        <p>모바일·태블릿·PC 모두 최적화. 수업 전날 어디서든 빠르게 확인하세요.</p>
       </div>
+    </div>
+
+    <!-- CTA 배너 -->
+    <div class="about-cta">
+      <div class="about-cta-text">
+        <strong>지금 바로 시작해보세요</strong>
+        <span>회원가입하고 나만의 수업 질문 아카이브를 만들어보세요.</span>
+      </div>
+      <a href="auth.html?tab=signup" class="btn btn-primary"><i class="fas fa-user-plus"></i> 무료 가입</a>
     </div>
   </div>
 </section>
@@ -282,7 +332,6 @@
   <i class="fas fa-chevron-up"></i>
 </button>
 
-<script src="js/data.js"></script>
 <script src="js/main.js"></script>
 </body>
 </html>

@@ -32,18 +32,15 @@ document.addEventListener('DOMContentLoaded', async () => {
 });
 
 /* =============================================
-   API / 데이터 로드
+   도서 로드 — Supabase 전용
    ============================================= */
 async function loadAllBooks() {
   try {
-    const res = await fetch('tables/books?limit=300');
-    if (!res.ok) throw new Error('API 오류');
-    const data = await res.json();
-    if (data && data.data && data.data.length > 0) return data.data;
-    return SAMPLE_BOOKS;
+    const books = await db.getAll('books', { order: 'title.asc' });
+    return books || [];
   } catch (e) {
-    console.warn('API 연결 실패, 샘플 데이터 사용');
-    return SAMPLE_BOOKS;
+    console.error('도서 로드 실패:', e.message);
+    return [];
   }
 }
 

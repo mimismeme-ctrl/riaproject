@@ -10,7 +10,7 @@ const state = {
   allBooks: [],
   filteredBooks: [],
   currentPage: 1,
-  booksPerPage: 12,
+  booksPerPage: 8,
   activeTheme: 'all',
   activeAge: 'all',
   searchQuery: '',
@@ -26,7 +26,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   showLoading(false);
   renderFeatured();
   renderBooks();
-  loadTodayQuestion();
+  initTodaySlider();
   initSearch();
   initFilters();
   initSort();
@@ -36,23 +36,19 @@ document.addEventListener('DOMContentLoaded', async () => {
 });
 
 /* =============================================
-   API 데이터 로드
+   도서 데이터 로드 — Supabase 전용
    ============================================= */
 async function loadBooks() {
   try {
-    const res = await fetch('tables/books?limit=300&sort=title');
-    if (!res.ok) throw new Error('API 오류');
-    const data = await res.json();
-    if (data && data.data && data.data.length > 0) {
-      state.allBooks = data.data;
-    } else {
-      state.allBooks = SAMPLE_BOOKS;
-    }
+    const books = await db.getAll('books', { order: 'title.asc' });
+    state.allBooks = books || [];
+    state.filteredBooks = [...state.allBooks];
   } catch (e) {
-    console.warn('API 연결 실패, 샘플 데이터 사용:', e.message);
-    state.allBooks = SAMPLE_BOOKS;
+    console.error('도서 로드 실패:', e.message);
+    state.allBooks = [];
+    state.filteredBooks = [];
+    showError('데이터를 불러오지 못했어요. Supabase 연결을 확인해주세요.');
   }
-  state.filteredBooks = [...state.allBooks];
 }
 
 /* =============================================
@@ -62,13 +58,13 @@ function showLoading(show) {
   const spinner = document.getElementById('loadingSpinner');
   const grid = document.getElementById('booksGrid');
   if (!spinner || !grid) return;
-  if (show) {
-    spinner.style.display = 'flex';
-    grid.style.display = 'none';
-  } else {
-    spinner.style.display = 'none';
-    grid.style.display = 'grid';
-  }
+  spinner.style.display = show ? 'flex' : 'none';
+  grid.style.display   = show ? 'none' : 'grid';
+}
+
+function showError(msg) {
+  const spinner = document.getElementById('loadingSpinner');
+  if (spinner) spinner.innerHTML = `<div class="spinner-icon">⚠️</div><p style="color:#E53E3E">${msg}</p>`;
 }
 
 /* =============================================
@@ -167,29 +163,190 @@ function renderFeatured() {
 }
 
 /* =============================================
-   오늘의 창의 질문
+   오늘의 질문 슬라이더 (4장 카드 자동+수동)
    ============================================= */
-function loadTodayQuestion() {
-  if (state.allBooks.length === 0) return;
+/* =============================================
+   오늘의 질문 — 1장씩 롤링 슬라이더
+   ============================================= */
+const tqState = {
+  cards: [],
+  idx: 0,
+  total: 0,
+  timer: null,
+  progress: null,
+  progressVal: 0,
+  animating: false
+};
 
+function initTodaySlider() {
+  const stage   = document.getElementById('tqStage');
+  const dots    = document.getElementById('tqDots');
+  const counter = document.getElementById('tqCounter');
+  const prev    = document.getElementById('tqPrev');
+  const next    = document.getElementById('tqNext');
+  if (!stage) return;
+
+  // 카드 풀 구성 (최대 8장 랜덤)
   const pool = state.allBooks.filter(b =>
     b.creative_questions && b.creative_questions.length > 0
   );
   if (pool.length === 0) return;
 
-  const book = pool[Math.floor(Math.random() * pool.length)];
-  const questions = book.creative_questions;
-  const question = questions[Math.floor(Math.random() * questions.length)];
+  const shuffled = [...pool].sort(() => Math.random() - 0.5).slice(0, 8);
+  tqState.cards = shuffled.map(book => {
+    const qs = book.creative_questions;
+    return { book, question: qs[Math.floor(Math.random() * qs.length)] };
+  });
+  tqState.total = tqState.cards.length;
 
-  const emojiEl = document.getElementById('todayEmoji');
-  const titleEl = document.getElementById('todayBookTitle');
-  const questionEl = document.getElementById('todayQuestionText');
-  const linkEl = document.getElementById('todayBookLink');
+  // 프로그레스 바 생성
+  const progEl = document.createElement('div');
+  progEl.className = 'tq-progress';
+  progEl.style.width = '0%';
+  document.querySelector('.today-question-section')?.appendChild(progEl);
+  tqState.progress = progEl;
 
-  if (emojiEl) emojiEl.textContent = book.cover_emoji || '📚';
-  if (titleEl) titleEl.textContent = `📖 ${book.title}`;
-  if (questionEl) questionEl.textContent = question;
-  if (linkEl) linkEl.href = `book.html?id=${encodeURIComponent(book.id)}`;
+  // 닷 생성
+  dots.innerHTML = '';
+  for (let i = 0; i < tqState.total; i++) {
+    const btn = document.createElement('button');
+    btn.className = 'tq-dot' + (i === 0 ? ' active' : '');
+    btn.setAttribute('aria-label', `${i + 1}번 질문`);
+    btn.addEventListener('click', () => tqGoTo(i, i > tqState.idx ? 'right' : 'left'));
+    dots.appendChild(btn);
+  }
+
+  // 화살표
+  if (prev) prev.addEventListener('click', () => tqGoTo(tqState.idx - 1, 'left'));
+  if (next) next.addEventListener('click', () => tqGoTo(tqState.idx + 1, 'right'));
+
+  // 터치 스와이프
+  let tx = 0;
+  stage.addEventListener('touchstart', e => { tx = e.touches[0].clientX; }, { passive: true });
+  stage.addEventListener('touchend', e => {
+    const dx = e.changedTouches[0].clientX - tx;
+    if (Math.abs(dx) > 50) tqGoTo(tqState.idx + (dx < 0 ? 1 : -1), dx < 0 ? 'right' : 'left');
+  });
+
+  // 첫 번째 카드 표시 (애니 없이)
+  tqRender(0, null);
+  tqUpdateUI();
+  tqStartAuto();
+}
+
+/** 카드 HTML 생성 */
+function tqCardHTML(item) {
+  const { book, question } = item;
+  const themes = Array.isArray(book.themes)
+    ? book.themes : (book.themes ? String(book.themes).split(',').map(t => t.trim()) : []);
+  const tagsHTML = themes.slice(0, 2).map(t =>
+    `<span class="tq-rcard-tag">${escHtml(t)}</span>`).join('');
+
+  return `
+    <a class="tq-rcard" href="book.html?id=${encodeURIComponent(book.id || book.title)}"
+       aria-label="${escHtml(book.title)} 창의 질문">
+      <div class="tq-rcard-emoji">${book.cover_emoji || '📚'}</div>
+      <div class="tq-rcard-body">
+        <div class="tq-rcard-tags">
+          ${tagsHTML}
+          ${book.age_range ? `<span class="tq-rcard-tag">${escHtml(book.age_range)}</span>` : ''}
+        </div>
+        <p class="tq-rcard-question">"${escHtml(question)}"</p>
+        <div class="tq-rcard-divider"></div>
+        <div class="tq-rcard-book">
+          <div class="tq-rcard-book-info">
+            <span class="tq-rcard-book-title">${escHtml(book.title)}</span>
+            ${book.author ? ` · <span>${escHtml(book.author)}</span>` : ''}
+          </div>
+          <span class="tq-rcard-go"><i class="fas fa-arrow-right"></i> 책 보기</span>
+        </div>
+      </div>
+    </a>`;
+}
+
+/** 카드 렌더 (dirn: 'right'|'left'|null) */
+function tqRender(idx, dirn) {
+  const stage = document.getElementById('tqStage');
+  if (!stage) return;
+
+  const html = tqCardHTML(tqState.cards[idx]);
+
+  if (!dirn) {
+    stage.innerHTML = html;
+    return;
+  }
+
+  // 들어오는 카드
+  const incoming = document.createElement('div');
+  incoming.style.cssText = 'position:absolute;inset:0;';
+  incoming.innerHTML = html;
+  incoming.firstElementChild?.classList.add(
+    dirn === 'right' ? 'tq-slide-in-r' : 'tq-slide-in-l'
+  );
+
+  // 기존 카드 나가기 애니 (클래스는 별도 적용 없이 opacity fade)
+  const existing = stage.firstElementChild;
+  if (existing) {
+    existing.style.transition = 'opacity .3s';
+    existing.style.opacity = '0';
+    existing.style.pointerEvents = 'none';
+  }
+
+  stage.style.position = 'relative';
+  stage.appendChild(incoming);
+
+  setTimeout(() => {
+    stage.innerHTML = html;
+    tqState.animating = false;
+  }, 380);
+}
+
+function tqGoTo(idx, dirn = 'right') {
+  if (tqState.animating) return;
+  const total = tqState.total;
+  idx = ((idx % total) + total) % total; // 순환
+  if (idx === tqState.idx) return;
+
+  tqState.animating = true;
+  tqState.idx = idx;
+  tqRender(idx, dirn);
+  tqUpdateUI();
+  tqRestartAuto();
+}
+
+function tqUpdateUI() {
+  const { idx, total } = tqState;
+  // 닷
+  document.querySelectorAll('.tq-dot').forEach((d, i) =>
+    d.classList.toggle('active', i === idx));
+  // 카운터
+  const counter = document.getElementById('tqCounter');
+  if (counter) counter.textContent = `${idx + 1} / ${total}`;
+  // 프로그레스 리셋
+  if (tqState.progress) tqState.progress.style.width = '0%';
+  tqState.progressVal = 0;
+}
+
+function tqStartAuto() {
+  clearInterval(tqState.timer);
+  const INTERVAL = 6000; // 6초
+  const STEP     = 100;  // 100ms마다 갱신
+
+  tqState.timer = setInterval(() => {
+    tqState.progressVal += (STEP / INTERVAL) * 100;
+    if (tqState.progress) tqState.progress.style.width = `${Math.min(tqState.progressVal, 100)}%`;
+
+    if (tqState.progressVal >= 100) {
+      const next = (tqState.idx + 1) % tqState.total;
+      tqGoTo(next, 'right');
+    }
+  }, STEP);
+}
+
+function tqRestartAuto() {
+  if (tqState.progress) tqState.progress.style.width = '0%';
+  tqState.progressVal = 0;
+  tqStartAuto();
 }
 
 /* =============================================
@@ -231,13 +388,43 @@ function initFilters() {
       document.querySelectorAll(`.chip[data-type="${type}"]`).forEach(c => c.classList.remove('active'));
       chip.classList.add('active');
 
-      if (type === 'theme') state.activeTheme = filter;
-      if (type === 'age') state.activeAge = filter;
+      if (type === 'theme') {
+        state.activeTheme = filter;
+        updateFilterLabel('themeCurLabel', chip.textContent.trim());
+      }
+      if (type === 'age') {
+        state.activeAge = filter;
+        updateFilterLabel('ageCurLabel', chip.textContent.trim());
+      }
 
       state.currentPage = 1;
       applyFilters();
     });
   });
+}
+
+/* 필터 라벨 옆 현재 선택값 업데이트 */
+function updateFilterLabel(id, text) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  // 이모지·특수문자 제거하고 핵심 텍스트만
+  const clean = text.replace(/[\p{Emoji_Presentation}\p{Extended_Pictographic}\s]+/gu, '').trim();
+  el.textContent = clean || text.trim();
+}
+
+/* 라벨 뱃지 클릭 → 해당 타입 전체 초기화 */
+function resetFilter(type) {
+  if (type === 'age') {
+    state.activeAge = 'all';
+    updateFilterLabel('ageCurLabel', '전체');
+  } else if (type === 'theme') {
+    state.activeTheme = 'all';
+    updateFilterLabel('themeCurLabel', '전체');
+  }
+  // 모든 칩 active 해제
+  document.querySelectorAll(`.chip[data-type="${type}"]`).forEach(c => c.classList.remove('active'));
+  state.currentPage = 1;
+  applyFilters();
 }
 
 function initSort() {
@@ -304,9 +491,11 @@ function resetFilters() {
   if (searchClear) searchClear.classList.remove('visible');
   if (sortSelect) sortSelect.value = 'default';
 
-  document.querySelectorAll('.chip').forEach(chip => {
-    chip.classList.toggle('active', chip.dataset.filter === 'all');
-  });
+  // 칩 active 모두 해제 (전체 칩 없으므로 모두 해제)
+  document.querySelectorAll('.chip').forEach(chip => chip.classList.remove('active'));
+  // 라벨 뱃지 초기화
+  updateFilterLabel('ageCurLabel', '전체');
+  updateFilterLabel('themeCurLabel', '전체');
 
   state.filteredBooks = [...state.allBooks];
   renderBooks();
