@@ -332,9 +332,18 @@
 
     /* ── 반응형 ── */
     @media (max-width: 520px) {
-      .auth-panel { padding: 28px 22px 24px; }
+      .auth-page { padding: 24px 16px; align-items: flex-start; }
+      .auth-logo { margin-bottom: 24px; }
+      .auth-logo-icon { font-size: 40px; }
+      .auth-logo-name { font-size: 18px; }
+      .auth-panel { padding: 24px 20px 20px; }
       .auth-panel-title { font-size: 19px; }
-      #resetPanel { padding: 28px 22px; }
+      .auth-form { gap: 14px; }
+      #resetPanel { padding: 24px 20px; }
+    }
+    @media (max-width: 390px) {
+      .auth-tab { padding: 14px 8px; font-size: 14px; }
+      .auth-panel { padding: 20px 16px; }
     }
   </style>
 </head>
